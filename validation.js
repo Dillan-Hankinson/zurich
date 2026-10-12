@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const phoneRegex = /^[\d\s\-\(\)]+$/;
             if (!phoneRegex.test(value)) return 'Please enter a valid phone number';
             const digits = value.replace(/\D/g, '');
-            if (digits.length < 10) return 'Phone number must be at least 10 digits';
+            if (digits.length < 10 || digits.length > 11) return 'Phone number must be 10-11 digits';
             return '';
         },
 
@@ -37,10 +37,10 @@ document.addEventListener('DOMContentLoaded', function() {
             return '';
         },
 
-        ssn: (value) => {
-            if (!value.trim()) return 'Social Security Number is required';
-            const ssnRegex = /^\d{3}-?\d{2}-?\d{4}$/;
-            if (!ssnRegex.test(value)) return 'SSN must be in format XXX-XX-XXXX';
+        nino: (value) => {
+            if (!value.trim()) return 'National Insurance Number is required';
+            const ninoRegex = /^[A-Z]{2}\d{6}[A-D]$/i;
+            if (!ninoRegex.test(value.replace(/\s/g, ''))) return 'NI Number must be in format AB123456C';
             return '';
         },
 
@@ -56,14 +56,15 @@ document.addEventListener('DOMContentLoaded', function() {
             return '';
         },
 
-        state: (value) => {
-            if (!value) return 'Please select a state';
+        county: (value) => {
+            if (!value) return 'Please select a county';
             return '';
         },
 
-        zip: (value) => {
-            if (!value.trim()) return 'ZIP code is required';
-            if (!/^\d{5}(-\d{4})?$/.test(value)) return 'ZIP code must be 5 digits (or 5+4 format)';
+        postcode: (value) => {
+            if (!value.trim()) return 'Postcode is required';
+            const postcodeRegex = /^[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}$/i;
+            if (!postcodeRegex.test(value)) return 'Please enter a valid UK postcode';
             return '';
         },
 
@@ -85,14 +86,14 @@ document.addEventListener('DOMContentLoaded', function() {
         height: (value) => {
             if (!value) return 'Height is required';
             const height = parseInt(value);
-            if (height < 36 || height > 96) return 'Please enter a valid height (36-96 inches)';
+            if (height < 90 || height > 250) return 'Please enter a valid height (90-250 cm)';
             return '';
         },
 
         weight: (value) => {
             if (!value) return 'Weight is required';
             const weight = parseInt(value);
-            if (weight < 50 || weight > 500) return 'Please enter a valid weight (50-500 lbs)';
+            if (weight < 20 || weight > 250) return 'Please enter a valid weight (20-250 kg)';
             return '';
         },
 
@@ -209,10 +210,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const selectedConditions = Array.from(document.querySelectorAll('input[name="conditions"]:checked'))
                 .map(cb => cb.value);
 
-            // Calculate BMI
-            const height = parseInt(document.getElementById('height').value);
+            // Calculate BMI (metric formula: kg / (m^2))
+            const heightCm = parseInt(document.getElementById('height').value);
             const weight = parseInt(document.getElementById('weight').value);
-            const bmi = ((weight / (height * height)) * 703).toFixed(1);
+            const heightM = heightCm / 100;
+            const bmi = (weight / (heightM * heightM)).toFixed(1);
 
             // Hide form and show success message
             form.style.display = 'none';
