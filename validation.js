@@ -185,6 +185,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Form submission
     form.addEventListener('submit', function(e) {
         e.preventDefault();
+        e.stopPropagation();
 
         let isValid = true;
 
@@ -249,6 +250,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Hide form and show success message
                     form.style.display = 'none';
                     successMessage.style.display = 'block';
+                    document.getElementById('resubmitSection').style.display = 'block';
                     
                     // Update success message with application ID
                     const successTitle = successMessage.querySelector('h2');
@@ -292,8 +294,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Submit another application button
     const submitAnotherBtn = document.getElementById('submitAnotherBtn');
+    const resubmitSection = document.getElementById('resubmitSection');
+    
     if (submitAnotherBtn) {
-        submitAnotherBtn.addEventListener('click', function() {
+        submitAnotherBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
             // Reset the form
             form.reset();
             
@@ -306,6 +313,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Show form and hide success message
             successMessage.style.display = 'none';
+            if (resubmitSection) resubmitSection.style.display = 'none';
             form.style.display = 'block';
             
             // Scroll to top
