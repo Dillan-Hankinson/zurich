@@ -164,11 +164,11 @@
                                     <div style="text-align: center; margin-bottom: 20px;">
                                         <div style="display: inline-block; background: ${statusColor}; color: white; padding: 10px 30px; border-radius: 50px; font-size: 18px; font-weight: bold;">${statusBadge}</div>
                                     </div>
-                                    <div style="background: var(--input-bg); padding: 15px; border-radius: 5px; margin-bottom: 15px;">
-                                        <strong>Application ID:</strong> ${app.applicationId}<br>
-                                        <strong>Submitted:</strong> ${new Date(app.submissionDate).toLocaleDateString('en-GB')}<br>
+                                    <div style="background: var(--input-bg); padding: 15px; border-radius: 5px; margin-bottom: 15px; color: var(--text-primary);">
+                                        <strong>Application ID:</strong> ${app.applicationId || 'N/A'}<br>
+                                        <strong>Submitted:</strong> ${app.submissionDate ? new Date(app.submissionDate).toLocaleDateString('en-GB') : 'N/A'}<br>
                                         ${app.lastUpdated ? `<strong>Last Updated:</strong> ${new Date(app.lastUpdated).toLocaleDateString('en-GB')}<br>` : ''}
-                                        <strong>Coverage Type:</strong> ${app.coverage.type.charAt(0).toUpperCase() + app.coverage.type.slice(1)}
+                                        <strong>Coverage Type:</strong> ${app.coverage && app.coverage.type ? app.coverage.type.charAt(0).toUpperCase() + app.coverage.type.slice(1) : 'N/A'}
                                     </div>
                                 `;
 
@@ -193,16 +193,19 @@
 
                                 if (app.evaluationDetails && app.evaluationDetails.reasons) {
                                     html += `
-                                        <div style="background: var(--input-bg); padding: 15px; border-radius: 5px;">
+                                        <div style="background: var(--input-bg); padding: 15px; border-radius: 5px; color: var(--text-primary);">
                                             <strong>Evaluation Details:</strong><br>
-                                            <strong>Risk Score:</strong> ${app.evaluationDetails.riskScore}<br>
+                                            <strong>Risk Score:</strong> ${app.evaluationDetails.riskScore || 'N/A'}<br>
                                             <strong>Reasons:</strong>
-                                            <ul style="margin: 10px 0; padding-left: 20px;">
+                                            <ul style="margin: 10px 0; padding-left: 20px; color: var(--text-primary);">
                                                 ${app.evaluationDetails.reasons.map(reason => `<li>${reason}</li>`).join('')}
                                             </ul>
                                         </div>
                                     `;
                                 }
+
+                                // Scroll to results
+                                window.scrollTo({ top: applicationResult.offsetTop - 20, behavior: 'smooth' });
 
                                 resultContent.innerHTML = html;
                                 applicationResult.style.display = 'block';
@@ -212,7 +215,11 @@
                         })
                         .catch(error => {
                             console.error('Error:', error);
-                            alert('An error occurred while checking your application. Please ensure the server is running and try again.');
+                            noApplicationFound.style.display = 'block';
+                            const errorDiv = document.createElement('div');
+                            errorDiv.style.cssText = 'background: #f8d7da; border: 2px solid #e74c3c; padding: 15px; border-radius: 5px; margin-top: 15px; color: #721c24;';
+                            errorDiv.innerHTML = `<strong>Error:</strong> ${error.message || 'An error occurred while checking your application. Please ensure the server is running and try again.'}`;
+                            noApplicationFound.appendChild(errorDiv);
                         });
                 }
             });
