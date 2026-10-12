@@ -124,6 +124,14 @@
                 <span class="error-message"></span>
             </div>
 
+            <div class="form-group" id="numDependentsGroup" style="display: none;">
+                <label for="numDependents">Number of Family Members (excluding yourself) *</label>
+                <input type="number" id="numDependents" name="numDependents" min="1" max="10">
+                <span class="error-message"></span>
+            </div>
+
+            <div id="dependentsContainer"></div>
+
             <div class="form-group">
                 <label>Do you have any pre-existing conditions? *</label>
                 <div class="radio-group">
@@ -261,5 +269,183 @@
     </div>
 
     <script src="validation.js"></script>
+    <script>
+        // Handle coverage type change
+        document.getElementById('coverage').addEventListener('change', function() {
+            const numDependentsGroup = document.getElementById('numDependentsGroup');
+            const numDependentsInput = document.getElementById('numDependents');
+            const dependentsContainer = document.getElementById('dependentsContainer');
+            
+            if (this.value === 'family') {
+                numDependentsGroup.style.display = 'block';
+                numDependentsInput.required = true;
+            } else {
+                numDependentsGroup.style.display = 'none';
+                numDependentsInput.required = false;
+                numDependentsInput.value = '';
+                dependentsContainer.innerHTML = '';
+            }
+        });
+
+        // Handle number of dependents change
+        document.getElementById('numDependents').addEventListener('input', function() {
+            const numDependents = parseInt(this.value) || 0;
+            const dependentsContainer = document.getElementById('dependentsContainer');
+            
+            // Clear existing dependent forms
+            dependentsContainer.innerHTML = '';
+            
+            // Create form sections for each dependent
+            for (let i = 0; i < numDependents; i++) {
+                const dependentSection = document.createElement('div');
+                dependentSection.className = 'health-section';
+                dependentSection.innerHTML = `
+                    <h2>Family Member ${i + 1} - Health Information</h2>
+                    <p class="section-description">Please provide accurate health information for family member ${i + 1}.</p>
+
+                    <div class="form-group">
+                        <label for="dependent${i}_age">Age *</label>
+                        <input type="number" id="dependent${i}_age" name="dependent${i}_age" min="0" max="120" required>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="dependent${i}_height">Height (cm) *</label>
+                            <input type="number" id="dependent${i}_height" name="dependent${i}_height" min="90" max="250" required>
+                            <span class="error-message"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dependent${i}_weight">Weight (kg) *</label>
+                            <input type="number" id="dependent${i}_weight" name="dependent${i}_weight" min="20" max="250" required>
+                            <span class="error-message"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dependent${i}_smoking">Smoking Status *</label>
+                            <select id="dependent${i}_smoking" name="dependent${i}_smoking" required>
+                                <option value="">Select Status</option>
+                                <option value="never">Never Smoked</option>
+                                <option value="former">Former Smoker (quit 1+ years ago)</option>
+                                <option value="current">Current Smoker</option>
+                            </select>
+                            <span class="error-message"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Do they have any pre-existing conditions? *</label>
+                        <div class="radio-group">
+                            <label>
+                                <input type="radio" name="dependent${i}_preexisting" value="yes" required>
+                                Yes
+                            </label>
+                            <label>
+                                <input type="radio" name="dependent${i}_preexisting" value="no" required>
+                                No
+                            </label>
+                        </div>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Existing Health Conditions (check all that apply)</label>
+                        <div class="checkbox-grid">
+                            <label>
+                                <input type="checkbox" name="dependent${i}_conditions" value="diabetes">
+                                Diabetes
+                            </label>
+                            <label>
+                                <input type="checkbox" name="dependent${i}_conditions" value="heart_disease">
+                                Heart Disease
+                            </label>
+                            <label>
+                                <input type="checkbox" name="dependent${i}_conditions" value="high_blood_pressure">
+                                High Blood Pressure
+                            </label>
+                            <label>
+                                <input type="checkbox" name="dependent${i}_conditions" value="asthma">
+                                Asthma
+                            </label>
+                            <label>
+                                <input type="checkbox" name="dependent${i}_conditions" value="cancer">
+                                Cancer (current or history)
+                            </label>
+                            <label>
+                                <input type="checkbox" name="dependent${i}_conditions" value="stroke">
+                                Stroke (history)
+                            </label>
+                            <label>
+                                <input type="checkbox" name="dependent${i}_conditions" value="kidney_disease">
+                                Kidney Disease
+                            </label>
+                            <label>
+                                <input type="checkbox" name="dependent${i}_conditions" value="copd">
+                                COPD
+                            </label>
+                            <label>
+                                <input type="checkbox" name="dependent${i}_conditions" value="mental_health">
+                                Mental Health Conditions
+                            </label>
+                            <label>
+                                <input type="checkbox" name="dependent${i}_conditions" value="arthritis">
+                                Arthritis
+                            </label>
+                            <label>
+                                <input type="checkbox" name="dependent${i}_conditions" value="sleep_apnea">
+                                Sleep Apnea
+                            </label>
+                            <label>
+                                <input type="checkbox" name="dependent${i}_conditions" value="other" id="dependent${i}_otherConditionCheckbox">
+                                Other
+                            </label>
+                        </div>
+                        <div class="form-group" id="dependent${i}_otherConditionInput" style="display: none; margin-top: 10px;">
+                            <input type="text" name="dependent${i}_otherCondition" id="dependent${i}_otherCondition" placeholder="Please specify other condition">
+                            <span class="error-message"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dependent${i}_medications">Current Medications</label>
+                        <textarea id="dependent${i}_medications" name="dependent${i}_medications" rows="3" placeholder="List any medications they currently take (optional)"></textarea>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dependent${i}_surgeries">Past Surgeries or Hospitalizations</label>
+                        <textarea id="dependent${i}_surgeries" name="dependent${i}_surgeries" rows="3" placeholder="List any major surgeries or hospitalizations in the past 5 years (optional)"></textarea>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dependent${i}_familyHistory">Family Medical History</label>
+                        <textarea id="dependent${i}_familyHistory" name="dependent${i}_familyHistory" rows="3" placeholder="List any significant family medical history (heart disease, cancer, diabetes, etc.) - optional"></textarea>
+                        <span class="error-message"></span>
+                    </div>
+                `;
+                
+                dependentsContainer.appendChild(dependentSection);
+                
+                // Add event listener for "other" condition checkbox
+                const otherCheckbox = document.getElementById(`dependent${i}_otherConditionCheckbox`);
+                const otherInput = document.getElementById(`dependent${i}_otherConditionInput`);
+                
+                if (otherCheckbox && otherInput) {
+                    otherCheckbox.addEventListener('change', function() {
+                        if (this.checked) {
+                            otherInput.style.display = 'block';
+                            document.getElementById(`dependent${i}_otherCondition`).required = true;
+                        } else {
+                            otherInput.style.display = 'none';
+                            document.getElementById(`dependent${i}_otherCondition`).required = false;
+                            document.getElementById(`dependent${i}_otherCondition`).value = '';
+                        }
+                    });
+                }
+            }
+        });
+    </script>
 </body>
 </html>
