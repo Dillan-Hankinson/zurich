@@ -1,1 +1,18 @@
 .aider*
+
+# Node modules
+node_modules/
+
+# Application data
+applications.json
+
+# Environment variables
+.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
