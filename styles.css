@@ -118,8 +118,12 @@ h1 {
 
 .form-row {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: 15px;
+}
+
+.form-row .form-group {
+    margin-bottom: 0;
 }
 
 label {
