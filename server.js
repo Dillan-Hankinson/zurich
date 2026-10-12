@@ -44,6 +44,94 @@ function calculateBMI(heightCm, weightKg) {
     return (weightKg / (heightM * heightM)).toFixed(1);
 }
 
+// Evaluate application and determine status
+function evaluateApplication(formData, bmi, healthConditions) {
+    const reasons = [];
+    let riskScore = 0;
+
+    // Check for "other" condition - automatic referral
+    const hasOtherCondition = healthConditions.some(condition => 
+        condition.toLowerCase().includes('other:')
+    );
+    if (hasOtherCondition) {
+        reasons.push('Other health condition requires manual review');
+        return { status: 'referred', reasons, riskScore: 'N/A' };
+    }
+
+    // Age evaluation
+    const dob = new Date(formData.dob);
+    const age = new Date().getFullYear() - dob.getFullYear();
+    if (age > 65) {
+        riskScore += 2;
+        reasons.push('Age over 65');
+    } else if (age > 50) {
+        riskScore += 1;
+        reasons.push('Age over 50');
+    }
+
+    // BMI evaluation
+    const bmiValue = parseFloat(bmi);
+    if (bmiValue < 18.5) {
+        riskScore += 2;
+        reasons.push('BMI below healthy range (underweight)');
+    } else if (bmiValue >= 30) {
+        riskScore += 2;
+        reasons.push('BMI indicates obesity');
+    } else if (bmiValue >= 25) {
+        riskScore += 1;
+        reasons.push('BMI indicates overweight');
+    }
+
+    // Smoking status
+    if (formData.smoking === 'current') {
+        riskScore += 3;
+        reasons.push('Current smoker');
+    } else if (formData.smoking === 'former') {
+        riskScore += 1;
+        reasons.push('Former smoker');
+    }
+
+    // Pre-existing conditions
+    if (formData.preexisting === 'yes') {
+        riskScore += 2;
+        reasons.push('Has pre-existing conditions');
+    }
+
+    // High-risk health conditions
+    const highRiskConditions = ['cancer', 'heart_disease', 'stroke', 'kidney_disease'];
+    const mediumRiskConditions = ['diabetes', 'high_blood_pressure', 'copd', 'sleep_apnea'];
+    
+    let hasHighRisk = false;
+    let mediumRiskCount = 0;
+
+    healthConditions.forEach(condition => {
+        if (highRiskConditions.includes(condition)) {
+            hasHighRisk = true;
+            riskScore += 3;
+            reasons.push(`High-risk condition: ${condition.replace('_', ' ')}`);
+        } else if (mediumRiskConditions.includes(condition)) {
+            mediumRiskCount++;
+            riskScore += 1;
+            reasons.push(`Medium-risk condition: ${condition.replace('_', ' ')}`);
+        }
+    });
+
+    // Multiple conditions increase risk
+    if (healthConditions.length >= 3) {
+        riskScore += 2;
+        reasons.push('Multiple health conditions');
+    }
+
+    // Decision logic
+    if (riskScore >= 8 || hasHighRisk) {
+        return { status: 'rejected', reasons, riskScore };
+    } else if (riskScore >= 4 || mediumRiskCount >= 2) {
+        return { status: 'referred', reasons, riskScore };
+    } else {
+        return { status: 'approved', reasons: ['Low risk profile'], riskScore };
+    }
+}
+
 // Generate unique application ID
 function generateApplicationId() {
     const timestamp = Date.now();
@@ -139,11 +227,19 @@ app.post('/api/submit-application', async (req, res) => {
             }
         }
 
+        // Evaluate application
+        const evaluation = evaluateApplication(formData, bmi, healthConditions);
+
         // Create application object
         const application = {
             applicationId: generateApplicationId(),
             submissionDate: new Date().toISOString(),
-            status: 'pending',
+            status: evaluation.status,
+            evaluationDetails: {
+                riskScore: evaluation.riskScore,
+                reasons: evaluation.reasons,
+                evaluatedAt: new Date().toISOString()
+            },
             personalInfo: {
                 fullName: formData.fullName.trim(),
                 email: formData.email.trim().toLowerCase(),
@@ -189,13 +285,18 @@ app.post('/api/submit-application', async (req, res) => {
         console.log(`Applicant: ${application.personalInfo.fullName}`);
         console.log(`Email: ${application.personalInfo.email}`);
         console.log(`BMI: ${application.healthInfo.bmi}`);
+        console.log(`Status: ${application.status.toUpperCase()}`);
+        console.log(`Risk Score: ${evaluation.riskScore}`);
+        console.log(`Reasons: ${evaluation.reasons.join(', ')}`);
 
         // Send success response
         res.json({
             success: true,
             message: 'Application submitted successfully',
             applicationId: application.applicationId,
-            submissionDate: application.submissionDate
+            submissionDate: application.submissionDate,
+            status: application.status,
+            evaluationDetails: application.evaluationDetails
         });
 
     } catch (error) {

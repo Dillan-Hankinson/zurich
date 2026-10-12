@@ -299,8 +299,8 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Redirect to success page with application ID
-                    window.location.href = `success.html?id=${data.applicationId}&date=${encodeURIComponent(data.submissionDate)}`;
+                    // Redirect to success page with application ID and status
+                    window.location.href = `success.html?id=${data.applicationId}&date=${encodeURIComponent(data.submissionDate)}&status=${data.status}`;
                 } else {
                     alert('Error submitting application: ' + (data.errors ? data.errors.join(', ') : data.message));
                 }
