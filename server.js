@@ -15,6 +15,11 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files
 app.use(express.static(__dirname));
 
+// Serve index.html as the default page
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 // Helper function to read applications from file
 async function readApplications() {
     try {
