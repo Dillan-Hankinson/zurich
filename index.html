@@ -8,6 +8,10 @@
 </head>
 <body>
     <div class="container">
+        <button type="button" class="dark-mode-toggle" id="darkModeToggle">
+            <span id="darkModeIcon">🌙</span>
+            <span id="darkModeText">Dark Mode</span>
+        </button>
         <h1>Health Insurance Application</h1>
         <form id="insuranceForm" novalidate>
             <div class="form-group">
@@ -269,6 +273,7 @@
         </form>
     </div>
 
+    <script src="dark-mode.js"></script>
     <script src="validation.js"></script>
     <script>
         // Handle coverage type change

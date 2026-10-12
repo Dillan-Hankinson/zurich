@@ -4,27 +4,102 @@
     box-sizing: border-box;
 }
 
+:root {
+    /* Light mode colors */
+    --bg-gradient-start: #667eea;
+    --bg-gradient-end: #764ba2;
+    --container-bg: #ffffff;
+    --text-primary: #333;
+    --text-secondary: #555;
+    --text-tertiary: #666;
+    --input-bg: #ffffff;
+    --input-border: #ddd;
+    --input-focus: #667eea;
+    --section-bg: #f8f9fa;
+    --checkbox-hover: #e9ecef;
+    --button-reset-bg: #f8f9fa;
+    --button-reset-border: #ddd;
+    --button-reset-hover: #e9ecef;
+    --shadow-color: rgba(0, 0, 0, 0.2);
+    --success-bg: #d4edda;
+    --success-border: #27ae60;
+    --success-text: #155724;
+}
+
+body.dark-mode {
+    /* Dark mode colors */
+    --bg-gradient-start: #1a1a2e;
+    --bg-gradient-end: #16213e;
+    --container-bg: #0f3460;
+    --text-primary: #e9ecef;
+    --text-secondary: #dee2e6;
+    --text-tertiary: #adb5bd;
+    --input-bg: #1a1a2e;
+    --input-border: #495057;
+    --input-focus: #667eea;
+    --section-bg: #16213e;
+    --checkbox-hover: #1a1a2e;
+    --button-reset-bg: #1a1a2e;
+    --button-reset-border: #495057;
+    --button-reset-hover: #16213e;
+    --shadow-color: rgba(0, 0, 0, 0.5);
+    --success-bg: #1e4620;
+    --success-border: #27ae60;
+    --success-text: #a3cfbb;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
     min-height: 100vh;
     padding: 20px;
+    transition: background 0.3s ease;
 }
 
 .container {
     max-width: 800px;
     margin: 0 auto;
-    background: white;
+    background: var(--container-bg);
     padding: 40px;
     border-radius: 10px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 10px 40px var(--shadow-color);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+}
+
+.dark-mode-toggle {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--section-bg);
+    border: 2px solid var(--input-border);
+    border-radius: 50px;
+    padding: 8px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+    z-index: 100;
+}
+
+.dark-mode-toggle:hover {
+    background: var(--checkbox-hover);
+    transform: scale(1.05);
+}
+
+.dark-mode-toggle span {
+    font-size: 18px;
 }
 
 h1 {
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 30px;
     text-align: center;
     font-size: 2em;
+    transition: color 0.3s ease;
 }
 
 .form-group {
@@ -40,8 +115,9 @@ h1 {
 label {
     display: block;
     margin-bottom: 5px;
-    color: #555;
+    color: var(--text-secondary);
     font-weight: 500;
+    transition: color 0.3s ease;
 }
 
 input[type="text"],
@@ -51,10 +127,12 @@ input[type="date"],
 select {
     width: 100%;
     padding: 12px;
-    border: 2px solid #ddd;
+    border: 2px solid var(--input-border);
     border-radius: 5px;
     font-size: 16px;
-    transition: border-color 0.3s;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    transition: border-color 0.3s, background 0.3s, color 0.3s;
 }
 
 input[type="text"]:focus,
@@ -63,7 +141,7 @@ input[type="tel"]:focus,
 input[type="date"]:focus,
 select:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--input-focus);
 }
 
 input.invalid,
@@ -108,22 +186,25 @@ input[type="checkbox"] {
 }
 
 .health-section {
-    background: #f8f9fa;
+    background: var(--section-bg);
     padding: 25px;
     border-radius: 8px;
     margin: 30px 0;
+    transition: background 0.3s ease;
 }
 
 .health-section h2 {
-    color: #333;
+    color: var(--text-primary);
     font-size: 1.5em;
     margin-bottom: 10px;
+    transition: color 0.3s ease;
 }
 
 .section-description {
-    color: #666;
+    color: var(--text-tertiary);
     margin-bottom: 20px;
     font-size: 14px;
+    transition: color 0.3s ease;
 }
 
 .checkbox-grid {
@@ -140,13 +221,13 @@ input[type="checkbox"] {
     font-weight: normal;
     cursor: pointer;
     padding: 8px;
-    background: white;
+    background: var(--input-bg);
     border-radius: 4px;
     transition: background-color 0.2s;
 }
 
 .checkbox-grid label:hover {
-    background: #e9ecef;
+    background: var(--checkbox-hover);
 }
 
 .checkbox-grid input[type="checkbox"] {
@@ -156,31 +237,35 @@ input[type="checkbox"] {
 textarea {
     width: 100%;
     padding: 12px;
-    border: 2px solid #ddd;
+    border: 2px solid var(--input-border);
     border-radius: 5px;
     font-size: 16px;
     font-family: inherit;
     resize: vertical;
-    transition: border-color 0.3s;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    transition: border-color 0.3s, background 0.3s, color 0.3s;
 }
 
 textarea:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--input-focus);
 }
 
 input[type="number"] {
     width: 100%;
     padding: 12px;
-    border: 2px solid #ddd;
+    border: 2px solid var(--input-border);
     border-radius: 5px;
     font-size: 16px;
-    transition: border-color 0.3s;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    transition: border-color 0.3s, background 0.3s, color 0.3s;
 }
 
 input[type="number"]:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--input-focus);
 }
 
 input[type="number"].invalid {
@@ -228,13 +313,13 @@ input[type="number"].valid {
 }
 
 .btn-reset {
-    background: #f8f9fa;
-    color: #555;
-    border: 2px solid #ddd;
+    background: var(--button-reset-bg);
+    color: var(--text-secondary);
+    border: 2px solid var(--button-reset-border);
 }
 
 .btn-reset:hover {
-    background: #e9ecef;
+    background: var(--button-reset-hover);
 }
 
 .success-message {
@@ -248,9 +333,10 @@ input[type="number"].valid {
 }
 
 .success-message p {
-    color: #555;
+    color: var(--text-secondary);
     font-size: 18px;
     margin-bottom: 30px;
+    transition: color 0.3s ease;
 }
 
 .success-message .btn-submit {
