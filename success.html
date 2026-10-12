@@ -26,6 +26,7 @@
         const applicationId = urlParams.get('id');
         const submissionDate = urlParams.get('date');
         const status = urlParams.get('status');
+        const quote = urlParams.get('quote') ? JSON.parse(decodeURIComponent(urlParams.get('quote'))) : null;
 
         // Redirect to index if no application ID (direct access)
         if (!applicationId) {
@@ -43,7 +44,38 @@
                 heading.textContent = '✓ Application Approved!';
                 heading.style.color = '#27ae60';
                 successText.innerHTML = `Congratulations! Your health insurance application has been approved.<br>Your application ID is: <strong>${applicationId}</strong><br>You will receive your policy documents via email within 2-3 business days.`;
-                statusDetails.innerHTML = `<div style="background: #d4edda; border: 2px solid #27ae60; padding: 15px; border-radius: 5px; color: #155724;"><strong>Status:</strong> APPROVED<br>Your application meets our acceptance criteria.</div>`;
+                
+                let quoteHtml = `<div style="background: #d4edda; border: 2px solid #27ae60; padding: 15px; border-radius: 5px; color: #155724;"><strong>Status:</strong> APPROVED<br>Your application meets our acceptance criteria.</div>`;
+                
+                if (quote) {
+                    quoteHtml += `
+                        <div style="background: #fff; border: 2px solid #27ae60; padding: 20px; border-radius: 8px; margin-top: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                            <h3 style="color: #27ae60; margin-top: 0; margin-bottom: 15px;">Your Insurance Quote</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                <div style="background: #f8f9fa; padding: 15px; border-radius: 5px;">
+                                    <div style="font-size: 14px; color: #666; margin-bottom: 5px;">Monthly Premium</div>
+                                    <div style="font-size: 28px; font-weight: bold; color: #27ae60;">£${quote.monthlyPremium}</div>
+                                    <div style="font-size: 12px; color: #666;">per month</div>
+                                </div>
+                                <div style="background: #f8f9fa; padding: 15px; border-radius: 5px;">
+                                    <div style="font-size: 14px; color: #666; margin-bottom: 5px;">Annual Premium</div>
+                                    <div style="font-size: 28px; font-weight: bold; color: #27ae60;">£${quote.annualPremiumWithDiscount}</div>
+                                    <div style="font-size: 12px; color: #666;">save £${quote.annualSavings}/year</div>
+                                </div>
+                            </div>
+                            <div style="background: #e7f3ff; padding: 12px; border-radius: 5px; border-left: 4px solid #2196F3;">
+                                <strong>Coverage:</strong> ${quote.coverageType.charAt(0).toUpperCase() + quote.coverageType.slice(1)} 
+                                ${quote.numPeople > 1 ? `(${quote.numPeople} people)` : ''}<br>
+                                <strong>Risk Category:</strong> ${quote.riskCategory}
+                            </div>
+                            <div style="margin-top: 15px; padding: 12px; background: #fff3cd; border-radius: 5px; font-size: 13px; color: #856404;">
+                                💡 <strong>Tip:</strong> Pay annually and save ${Math.round((quote.annualSavings / quote.annualPremium) * 100)}% on your premium!
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                statusDetails.innerHTML = quoteHtml;
             } else if (status === 'rejected') {
                 statusBadge.innerHTML = `<div style="display: inline-block; background: #e74c3c; color: white; padding: 15px 40px; border-radius: 50px; font-size: 24px; font-weight: bold; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);">✗ REJECTED</div>`;
                 heading.textContent = '✗ Application Not Approved';

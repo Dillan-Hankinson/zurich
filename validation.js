@@ -297,8 +297,12 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Redirect to success page with application ID and status
-                    window.location.href = `success.html?id=${data.applicationId}&date=${encodeURIComponent(data.submissionDate)}&status=${data.status}`;
+                    // Redirect to success page with application ID, status, and quote
+                    let url = `success.html?id=${data.applicationId}&date=${encodeURIComponent(data.submissionDate)}&status=${data.status}`;
+                    if (data.quote) {
+                        url += `&quote=${encodeURIComponent(JSON.stringify(data.quote))}`;
+                    }
+                    window.location.href = url;
                 } else {
                     alert('Error submitting application: ' + (data.errors ? data.errors.join(', ') : data.message));
                 }

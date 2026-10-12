@@ -44,6 +44,52 @@ function calculateBMI(heightCm, weightKg) {
     return (weightKg / (heightM * heightM)).toFixed(1);
 }
 
+// Calculate insurance quote based on risk score and coverage type
+function calculateQuote(riskScore, coverageType, numPeople) {
+    // Base monthly premium rates (in GBP)
+    const basePremiums = {
+        individual: 50,
+        spouse: 85,
+        family: 120
+    };
+
+    let basePremium = basePremiums[coverageType] || basePremiums.individual;
+
+    // Adjust for family size if family coverage
+    if (coverageType === 'family' && numPeople > 2) {
+        basePremium += (numPeople - 2) * 25; // £25 per additional family member
+    }
+
+    // Risk multiplier based on risk score
+    // Low risk (0-2): 1.0x
+    // Medium-low risk (2-4): 1.2x
+    // Medium risk (4-6): 1.5x
+    // Medium-high risk (6-8): 2.0x
+    let riskMultiplier = 1.0;
+    
+    if (riskScore >= 6) {
+        riskMultiplier = 2.0;
+    } else if (riskScore >= 4) {
+        riskMultiplier = 1.5;
+    } else if (riskScore >= 2) {
+        riskMultiplier = 1.2;
+    }
+
+    const monthlyPremium = Math.round(basePremium * riskMultiplier);
+    const annualPremium = monthlyPremium * 12;
+    const annualSavings = Math.round(monthlyPremium * 12 * 0.08); // 8% discount for annual payment
+
+    return {
+        monthlyPremium,
+        annualPremium,
+        annualPremiumWithDiscount: annualPremium - annualSavings,
+        annualSavings,
+        riskCategory: riskScore < 2 ? 'Low' : riskScore < 4 ? 'Medium-Low' : riskScore < 6 ? 'Medium' : 'Medium-High',
+        coverageType,
+        numPeople
+    };
+}
+
 // Evaluate a single person's risk
 function evaluatePerson(age, bmi, smoking, preexisting, healthConditions, personLabel) {
     const reasons = [];
@@ -236,11 +282,11 @@ function evaluateApplication(formData, bmi, healthConditions) {
     
     // Normal evaluation without "other" condition
     if (averageRiskScore >= 8 || hasAnyHighRisk) {
-        return { status: 'rejected', reasons: allReasons, riskScore: roundedAvgRisk };
+        return { status: 'rejected', reasons: allReasons, riskScore: roundedAvgRisk, numPeople };
     } else if (averageRiskScore >= 4 || totalMediumRiskCount >= 2) {
-        return { status: 'referred', reasons: allReasons, riskScore: roundedAvgRisk };
+        return { status: 'referred', reasons: allReasons, riskScore: roundedAvgRisk, numPeople };
     } else {
-        return { status: 'approved', reasons: ['Low risk profile'], riskScore: roundedAvgRisk };
+        return { status: 'approved', reasons: ['Low risk profile'], riskScore: roundedAvgRisk, numPeople };
     }
 }
 
@@ -404,6 +450,12 @@ app.post('/api/submit-application', async (req, res) => {
         // Evaluate application
         const evaluation = evaluateApplication(formData, bmi, healthConditions);
 
+        // Calculate quote if approved
+        let quote = null;
+        if (evaluation.status === 'approved') {
+            quote = calculateQuote(evaluation.riskScore, formData.coverage, evaluation.numPeople);
+        }
+
         // Build spouse data for spouse coverage
         let spouseData = null;
         if (formData.coverage === 'spouse' && formData.spouse_age) {
@@ -484,6 +536,7 @@ app.post('/api/submit-application', async (req, res) => {
                 reasons: evaluation.reasons,
                 evaluatedAt: new Date().toISOString()
             },
+            quote: quote,
             personalInfo: {
                 fullName: formData.fullName.trim(),
                 email: formData.email.trim().toLowerCase(),
@@ -566,7 +619,8 @@ app.post('/api/submit-application', async (req, res) => {
             lastUpdated: application.lastUpdated,
             isUpdate: isUpdate,
             status: application.status,
-            evaluationDetails: application.evaluationDetails
+            evaluationDetails: application.evaluationDetails,
+            quote: quote
         });
 
     } catch (error) {
