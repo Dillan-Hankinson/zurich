@@ -102,6 +102,15 @@ document.addEventListener('DOMContentLoaded', function() {
         smoking: (value) => {
             if (!value) return 'Please select your smoking status';
             return '';
+        },
+
+        otherCondition: (value) => {
+            const otherCheckbox = document.getElementById('otherConditionCheckbox');
+            if (otherCheckbox && otherCheckbox.checked) {
+                if (!value || !value.trim()) return 'Please specify the other condition';
+                if (value.trim().length < 3) return 'Please provide more details about the condition';
+            }
+            return '';
         }
     };
 
@@ -154,16 +163,37 @@ document.addEventListener('DOMContentLoaded', function() {
             if (this.value === 'other') {
                 if (this.checked) {
                     otherConditionInput.style.display = 'block';
+                    otherConditionField.setAttribute('required', 'required');
                 } else {
                     otherConditionInput.style.display = 'none';
+                    otherConditionField.removeAttribute('required');
                     otherConditionField.value = '';
+                    otherConditionField.classList.remove('valid', 'invalid');
+                    const errorSpan = otherConditionInput.querySelector('.error-message');
+                    if (errorSpan) errorSpan.textContent = '';
                 }
             }
         });
     });
 
     // Add real-time validation
-    const inputs = form.querySelectorAll('input:not([name="conditions"]), select, textarea');
+    const inputs = form.querySelectorAll('input:not([name="conditions"]):not([name="otherCondition"]), select, textarea:not([name="medications"]):not([name="surgeries"]):not([name="familyHistory"])');
+    
+    // Add otherCondition field separately with validation
+    if (otherConditionField) {
+        otherConditionField.addEventListener('blur', function() {
+            if (otherCheckbox && otherCheckbox.checked) {
+                validateField(this);
+            }
+        });
+        
+        otherConditionField.addEventListener('input', function() {
+            if (this.classList.contains('invalid') && otherCheckbox && otherCheckbox.checked) {
+                validateField(this);
+            }
+        });
+    }
+    
     inputs.forEach(input => {
         if (input.type === 'radio') {
             input.addEventListener('change', function() {
@@ -209,6 +239,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
+
+        if (isValid) {
+            // Validate "other condition" field if "other" is checked
+            const otherCheckbox = document.getElementById('otherConditionCheckbox');
+            const otherConditionField = document.getElementById('otherCondition');
+            if (otherCheckbox && otherCheckbox.checked) {
+                if (!validateField(otherConditionField)) {
+                    isValid = false;
+                }
+            }
+        }
 
         if (isValid) {
             // Collect health conditions
