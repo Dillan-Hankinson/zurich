@@ -194,10 +194,11 @@ function evaluateApplication(formData, bmi, healthConditions) {
     totalMediumRiskCount += primaryEval.mediumRiskCount;
 
     // Evaluate spouse for spouse coverage
-    if (formData.coverage === 'spouse' && formData.spouse_age) {
+    if (formData.coverage === 'spouse' && formData.spouse_dob) {
         numPeople += 1;
         
-        const spouseAge = parseInt(formData.spouse_age) || 0;
+        const spouseDob = new Date(formData.spouse_dob);
+        const spouseAge = new Date().getFullYear() - spouseDob.getFullYear();
         const spouseHeight = parseFloat(formData.spouse_height) || 0;
         const spouseWeight = parseFloat(formData.spouse_weight) || 0;
         const spouseBmi = calculateBMI(spouseHeight, spouseWeight);
@@ -235,7 +236,8 @@ function evaluateApplication(formData, bmi, healthConditions) {
         numPeople += numDependents;
 
         for (let i = 0; i < numDependents; i++) {
-            const depAge = parseInt(formData[`dependent${i}_age`]) || 0;
+            const depDob = new Date(formData[`dependent${i}_dob`]);
+            const depAge = new Date().getFullYear() - depDob.getFullYear();
             const depHeight = parseFloat(formData[`dependent${i}_height`]) || 0;
             const depWeight = parseFloat(formData[`dependent${i}_weight`]) || 0;
             const depBmi = calculateBMI(depHeight, depWeight);
@@ -322,8 +324,8 @@ function validateFormData(data) {
         
         const numDependents = parseInt(data.numDependents) || 0;
         for (let i = 0; i < numDependents; i++) {
-            if (!data[`dependent${i}_age`]) {
-                errors.push(`Age is required for dependent ${i + 1}`);
+            if (!data[`dependent${i}_dob`]) {
+                errors.push(`Date of birth is required for dependent ${i + 1}`);
             }
             if (!data[`dependent${i}_height`]) {
                 errors.push(`Height is required for dependent ${i + 1}`);
@@ -342,8 +344,8 @@ function validateFormData(data) {
 
     // Spouse coverage validation
     if (data.coverage === 'spouse') {
-        if (!data.spouse_age) {
-            errors.push('Spouse age is required');
+        if (!data.spouse_dob) {
+            errors.push('Spouse date of birth is required');
         }
         if (!data.spouse_height) {
             errors.push('Spouse height is required');
@@ -458,7 +460,9 @@ app.post('/api/submit-application', async (req, res) => {
 
         // Build spouse data for spouse coverage
         let spouseData = null;
-        if (formData.coverage === 'spouse' && formData.spouse_age) {
+        if (formData.coverage === 'spouse' && formData.spouse_dob) {
+            const spouseDob = new Date(formData.spouse_dob);
+            const spouseAge = new Date().getFullYear() - spouseDob.getFullYear();
             const spouseHeight = parseFloat(formData.spouse_height);
             const spouseWeight = parseFloat(formData.spouse_weight);
             const spouseBmi = calculateBMI(spouseHeight, spouseWeight);
@@ -479,7 +483,8 @@ app.post('/api/submit-application', async (req, res) => {
             }
 
             spouseData = {
-                age: parseInt(formData.spouse_age),
+                dateOfBirth: formData.spouse_dob,
+                age: spouseAge,
                 height: spouseHeight,
                 weight: spouseWeight,
                 bmi: parseFloat(spouseBmi),
@@ -497,6 +502,8 @@ app.post('/api/submit-application', async (req, res) => {
         if (formData.coverage === 'family' && formData.numDependents) {
             const numDependents = parseInt(formData.numDependents);
             for (let i = 0; i < numDependents; i++) {
+                const depDob = new Date(formData[`dependent${i}_dob`]);
+                const depAge = new Date().getFullYear() - depDob.getFullYear();
                 const depHeight = parseFloat(formData[`dependent${i}_height`]);
                 const depWeight = parseFloat(formData[`dependent${i}_weight`]);
                 const depBmi = calculateBMI(depHeight, depWeight);
@@ -512,7 +519,8 @@ app.post('/api/submit-application', async (req, res) => {
 
                 dependents.push({
                     dependentNumber: i + 1,
-                    age: parseInt(formData[`dependent${i}_age`]),
+                    dateOfBirth: formData[`dependent${i}_dob`],
+                    age: depAge,
                     height: depHeight,
                     weight: depWeight,
                     bmi: parseFloat(depBmi),
