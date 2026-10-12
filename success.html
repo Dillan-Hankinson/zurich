@@ -8,6 +8,7 @@
 </head>
 <body>
     <div class="container">
+        <div id="statusBadge" style="text-align: center; margin-bottom: 20px;"></div>
         <div id="statusMessage" class="success-message">
             <h2>Application Submitted Successfully!</h2>
             <p id="successText">Thank you for your health insurance application. We will review your information and contact you shortly.</p>
@@ -30,6 +31,7 @@
         if (!applicationId) {
             window.location.href = 'index.html';
         } else {
+            const statusBadge = document.getElementById('statusBadge');
             const statusMessage = document.getElementById('statusMessage');
             const successText = document.getElementById('successText');
             const statusDetails = document.getElementById('statusDetails');
@@ -37,21 +39,25 @@
 
             // Customize message based on status
             if (status === 'approved') {
+                statusBadge.innerHTML = `<div style="display: inline-block; background: #27ae60; color: white; padding: 15px 40px; border-radius: 50px; font-size: 24px; font-weight: bold; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);">✓ APPROVED</div>`;
                 heading.textContent = '✓ Application Approved!';
                 heading.style.color = '#27ae60';
                 successText.innerHTML = `Congratulations! Your health insurance application has been approved.<br>Your application ID is: <strong>${applicationId}</strong><br>You will receive your policy documents via email within 2-3 business days.`;
                 statusDetails.innerHTML = `<div style="background: #d4edda; border: 2px solid #27ae60; padding: 15px; border-radius: 5px; color: #155724;"><strong>Status:</strong> APPROVED<br>Your application meets our acceptance criteria.</div>`;
             } else if (status === 'rejected') {
+                statusBadge.innerHTML = `<div style="display: inline-block; background: #e74c3c; color: white; padding: 15px 40px; border-radius: 50px; font-size: 24px; font-weight: bold; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);">✗ REJECTED</div>`;
                 heading.textContent = '✗ Application Not Approved';
                 heading.style.color = '#e74c3c';
                 successText.innerHTML = `We regret to inform you that we cannot approve your application at this time.<br>Your application ID is: <strong>${applicationId}</strong><br>You may contact us to discuss alternative options or reapply in the future.`;
                 statusDetails.innerHTML = `<div style="background: #f8d7da; border: 2px solid #e74c3c; padding: 15px; border-radius: 5px; color: #721c24;"><strong>Status:</strong> NOT APPROVED<br>Based on the information provided, we are unable to offer coverage at this time.</div>`;
             } else if (status === 'referred') {
+                statusBadge.innerHTML = `<div style="display: inline-block; background: #f39c12; color: white; padding: 15px 40px; border-radius: 50px; font-size: 24px; font-weight: bold; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);">⚠ REFERRED</div>`;
                 heading.textContent = '⚠ Application Under Review';
                 heading.style.color = '#f39c12';
                 successText.innerHTML = `Your health insurance application requires additional review.<br>Your application ID is: <strong>${applicationId}</strong><br>Our underwriting team will contact you within 3-5 business days for further information.`;
                 statusDetails.innerHTML = `<div style="background: #fff3cd; border: 2px solid #f39c12; padding: 15px; border-radius: 5px; color: #856404;"><strong>Status:</strong> REFERRED FOR REVIEW<br>Your application requires manual evaluation by our underwriting team.</div>`;
             } else {
+                statusBadge.innerHTML = `<div style="display: inline-block; background: #3498db; color: white; padding: 15px 40px; border-radius: 50px; font-size: 24px; font-weight: bold; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);">PENDING</div>`;
                 successText.innerHTML = `Thank you for your health insurance application.<br>Your application ID is: <strong>${applicationId}</strong><br>We will review your information and contact you shortly.`;
             }
         }
