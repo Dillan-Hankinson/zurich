@@ -210,28 +210,63 @@ document.addEventListener('DOMContentLoaded', function() {
             const selectedConditions = Array.from(document.querySelectorAll('input[name="conditions"]:checked'))
                 .map(cb => cb.value);
 
-            // Calculate BMI (metric formula: kg / (m^2))
-            const heightCm = parseInt(document.getElementById('height').value);
-            const weight = parseInt(document.getElementById('weight').value);
-            const heightM = heightCm / 100;
-            const bmi = (weight / (heightM * heightM)).toFixed(1);
-
-            // Hide form and show success message
-            form.style.display = 'none';
-            successMessage.style.display = 'block';
-
-            // Log form data (in real app, this would be sent to server)
+            // Prepare form data for submission
             const formData = new FormData(form);
-            console.log('Form submitted successfully!');
-            console.log('Form data:');
-            for (let [key, value] of formData.entries()) {
-                console.log(`${key}: ${value}`);
-            }
-            console.log('Health Conditions:', selectedConditions);
-            console.log('Calculated BMI:', bmi);
+            const jsonData = {};
             
-            // In a real application, this data would be sent to a backend API
-            // for insurance pricing calculation based on risk factors
+            // Convert FormData to JSON object
+            for (let [key, value] of formData.entries()) {
+                if (key === 'conditions') {
+                    // Handle multiple checkboxes
+                    if (!jsonData.conditions) {
+                        jsonData.conditions = [];
+                    }
+                    jsonData.conditions.push(value);
+                } else {
+                    jsonData[key] = value;
+                }
+            }
+
+            // Add conditions if not already added
+            if (!jsonData.conditions) {
+                jsonData.conditions = selectedConditions;
+            }
+
+            // Convert terms checkbox to string
+            jsonData.terms = document.getElementById('terms').checked ? 'true' : 'false';
+
+            // Submit to backend
+            fetch('http://localhost:3000/api/submit-application', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(jsonData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Hide form and show success message
+                    form.style.display = 'none';
+                    successMessage.style.display = 'block';
+                    
+                    // Update success message with application ID
+                    const successTitle = successMessage.querySelector('h2');
+                    const successText = successMessage.querySelector('p');
+                    successTitle.textContent = 'Application Submitted Successfully!';
+                    successText.innerHTML = `Thank you for your health insurance application.<br>Your application ID is: <strong>${data.applicationId}</strong><br>We will review your information and contact you shortly.`;
+                    
+                    console.log('Application submitted successfully!');
+                    console.log('Application ID:', data.applicationId);
+                    console.log('Submission Date:', data.submissionDate);
+                } else {
+                    alert('Error submitting application: ' + (data.errors ? data.errors.join(', ') : data.message));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while submitting your application. Please ensure the server is running and try again.');
+            });
         } else {
             // Scroll to first error
             const firstError = form.querySelector('.invalid, .error-message:not(:empty)');
