@@ -24,7 +24,10 @@
         const applicationId = urlParams.get('id');
         const submissionDate = urlParams.get('date');
 
-        if (applicationId) {
+        // Redirect to index if no application ID (direct access)
+        if (!applicationId) {
+            window.location.href = 'index.html';
+        } else {
             const successText = document.getElementById('successText');
             successText.innerHTML = `Thank you for your health insurance application.<br>Your application ID is: <strong>${applicationId}</strong><br>We will review your information and contact you shortly.`;
         }
