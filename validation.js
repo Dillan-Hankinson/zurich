@@ -142,28 +142,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Handle "None of the Above" and "Other" checkbox logic
+    // Handle "Other" checkbox logic
     const conditionCheckboxes = document.querySelectorAll('input[name="conditions"]');
-    const noneCheckbox = document.querySelector('input[name="conditions"][value="none"]');
     const otherCheckbox = document.getElementById('otherConditionCheckbox');
     const otherConditionInput = document.getElementById('otherConditionInput');
     const otherConditionField = document.getElementById('otherCondition');
     
     conditionCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change', function() {
-            if (this.value === 'none' && this.checked) {
-                // Uncheck all other conditions
-                conditionCheckboxes.forEach(cb => {
-                    if (cb.value !== 'none') cb.checked = false;
-                });
-                // Hide other input
-                if (otherConditionInput) otherConditionInput.style.display = 'none';
-                if (otherConditionField) otherConditionField.value = '';
-            } else if (this.value !== 'none' && this.checked) {
-                // Uncheck "None of the Above"
-                if (noneCheckbox) noneCheckbox.checked = false;
-            }
-            
             // Show/hide "Other" text input
             if (this.value === 'other') {
                 if (this.checked) {
