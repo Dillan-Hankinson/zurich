@@ -147,6 +147,36 @@ function evaluateApplication(formData, bmi, healthConditions) {
     hasAnyOtherCondition = hasAnyOtherCondition || primaryEval.hasOtherCondition;
     totalMediumRiskCount += primaryEval.mediumRiskCount;
 
+    // Evaluate spouse for spouse coverage
+    if (formData.coverage === 'spouse' && formData.spouse_age) {
+        numPeople += 1;
+        
+        const spouseAge = parseInt(formData.spouse_age) || 0;
+        const spouseHeight = parseFloat(formData.spouse_height) || 0;
+        const spouseWeight = parseFloat(formData.spouse_weight) || 0;
+        const spouseBmi = calculateBMI(spouseHeight, spouseWeight);
+        const spouseSmoking = formData.spouse_smoking || 'never';
+        const spousePreexisting = formData.spouse_preexisting || 'no';
+        
+        // Parse spouse health conditions
+        let spouseConditions = [];
+        if (formData.spouse_conditions) {
+            if (Array.isArray(formData.spouse_conditions)) {
+                spouseConditions = formData.spouse_conditions;
+            } else if (typeof formData.spouse_conditions === 'string') {
+                spouseConditions = formData.spouse_conditions.split(',').map(c => c.trim()).filter(c => c);
+            }
+        }
+
+        const spouseEval = evaluatePerson(spouseAge, spouseBmi, spouseSmoking, spousePreexisting, spouseConditions, 'Spouse');
+        
+        totalRiskScore += spouseEval.riskScore;
+        allReasons.push(...spouseEval.reasons);
+        hasAnyHighRisk = hasAnyHighRisk || spouseEval.hasHighRisk;
+        hasAnyOtherCondition = hasAnyOtherCondition || spouseEval.hasOtherCondition;
+        totalMediumRiskCount += spouseEval.mediumRiskCount;
+    }
+
     // Evaluate dependents for family coverage
     if (formData.coverage === 'family' && formData.numDependents) {
         const numDependents = parseInt(formData.numDependents);
@@ -258,6 +288,25 @@ function validateFormData(data) {
         }
     }
 
+    // Spouse coverage validation
+    if (data.coverage === 'spouse') {
+        if (!data.spouse_age) {
+            errors.push('Spouse age is required');
+        }
+        if (!data.spouse_height) {
+            errors.push('Spouse height is required');
+        }
+        if (!data.spouse_weight) {
+            errors.push('Spouse weight is required');
+        }
+        if (!data.spouse_smoking) {
+            errors.push('Spouse smoking status is required');
+        }
+        if (!data.spouse_preexisting) {
+            errors.push('Spouse pre-existing conditions status is required');
+        }
+    }
+
     // Email validation
     if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
         errors.push('Invalid email format');
@@ -349,6 +398,36 @@ app.post('/api/submit-application', async (req, res) => {
         // Evaluate application
         const evaluation = evaluateApplication(formData, bmi, healthConditions);
 
+        // Build spouse data for spouse coverage
+        let spouseData = null;
+        if (formData.coverage === 'spouse' && formData.spouse_age) {
+            const spouseHeight = parseFloat(formData.spouse_height);
+            const spouseWeight = parseFloat(formData.spouse_weight);
+            const spouseBmi = calculateBMI(spouseHeight, spouseWeight);
+            
+            let spouseConditions = [];
+            if (formData.spouse_conditions) {
+                if (Array.isArray(formData.spouse_conditions)) {
+                    spouseConditions = formData.spouse_conditions;
+                } else if (typeof formData.spouse_conditions === 'string') {
+                    spouseConditions = formData.spouse_conditions.split(',').map(c => c.trim()).filter(c => c);
+                }
+            }
+
+            spouseData = {
+                age: parseInt(formData.spouse_age),
+                height: spouseHeight,
+                weight: spouseWeight,
+                bmi: parseFloat(spouseBmi),
+                smokingStatus: formData.spouse_smoking,
+                preexistingConditions: formData.spouse_preexisting === 'yes',
+                conditions: spouseConditions,
+                medications: formData.spouse_medications ? formData.spouse_medications.trim() : '',
+                surgeries: formData.spouse_surgeries ? formData.spouse_surgeries.trim() : '',
+                familyHistory: formData.spouse_familyHistory ? formData.spouse_familyHistory.trim() : ''
+            };
+        }
+
         // Build dependents array for family coverage
         const dependents = [];
         if (formData.coverage === 'family' && formData.numDependents) {
@@ -421,6 +500,7 @@ app.post('/api/submit-application', async (req, res) => {
                 surgeries: formData.surgeries ? formData.surgeries.trim() : '',
                 familyHistory: formData.familyHistory ? formData.familyHistory.trim() : ''
             },
+            spouse: spouseData,
             dependents: dependents,
             termsAccepted: true,
             termsAcceptedDate: new Date().toISOString()

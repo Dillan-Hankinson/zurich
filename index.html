@@ -131,6 +131,8 @@
 
             <div id="dependentsContainer"></div>
 
+            <div id="spouseContainer"></div>
+
             <div class="form-group">
                 <label>Do you have any pre-existing conditions? *</label>
                 <div class="radio-group">
@@ -274,15 +276,167 @@
             const numDependentsGroup = document.getElementById('numDependentsGroup');
             const numDependentsInput = document.getElementById('numDependents');
             const dependentsContainer = document.getElementById('dependentsContainer');
+            const spouseContainer = document.getElementById('spouseContainer');
+            
+            // Reset all containers
+            numDependentsGroup.style.display = 'none';
+            numDependentsInput.required = false;
+            numDependentsInput.value = '';
+            dependentsContainer.innerHTML = '';
+            spouseContainer.innerHTML = '';
             
             if (this.value === 'family') {
                 numDependentsGroup.style.display = 'block';
                 numDependentsInput.required = true;
-            } else {
-                numDependentsGroup.style.display = 'none';
-                numDependentsInput.required = false;
-                numDependentsInput.value = '';
-                dependentsContainer.innerHTML = '';
+            } else if (this.value === 'spouse') {
+                // Create spouse health information section
+                const spouseSection = document.createElement('div');
+                spouseSection.className = 'health-section';
+                spouseSection.innerHTML = `
+                    <h2>Spouse - Health Information</h2>
+                    <p class="section-description">Please provide accurate health information for your spouse.</p>
+
+                    <div class="form-group">
+                        <label for="spouse_age">Age *</label>
+                        <input type="number" id="spouse_age" name="spouse_age" min="18" max="120" required>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="spouse_height">Height (cm) *</label>
+                            <input type="number" id="spouse_height" name="spouse_height" min="90" max="250" required>
+                            <span class="error-message"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="spouse_weight">Weight (kg) *</label>
+                            <input type="number" id="spouse_weight" name="spouse_weight" min="20" max="250" required>
+                            <span class="error-message"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="spouse_smoking">Smoking Status *</label>
+                            <select id="spouse_smoking" name="spouse_smoking" required>
+                                <option value="">Select Status</option>
+                                <option value="never">Never Smoked</option>
+                                <option value="former">Former Smoker (quit 1+ years ago)</option>
+                                <option value="current">Current Smoker</option>
+                            </select>
+                            <span class="error-message"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Does your spouse have any pre-existing conditions? *</label>
+                        <div class="radio-group">
+                            <label>
+                                <input type="radio" name="spouse_preexisting" value="yes" required>
+                                Yes
+                            </label>
+                            <label>
+                                <input type="radio" name="spouse_preexisting" value="no" required>
+                                No
+                            </label>
+                        </div>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Existing Health Conditions (check all that apply)</label>
+                        <div class="checkbox-grid">
+                            <label>
+                                <input type="checkbox" name="spouse_conditions" value="diabetes">
+                                Diabetes
+                            </label>
+                            <label>
+                                <input type="checkbox" name="spouse_conditions" value="heart_disease">
+                                Heart Disease
+                            </label>
+                            <label>
+                                <input type="checkbox" name="spouse_conditions" value="high_blood_pressure">
+                                High Blood Pressure
+                            </label>
+                            <label>
+                                <input type="checkbox" name="spouse_conditions" value="asthma">
+                                Asthma
+                            </label>
+                            <label>
+                                <input type="checkbox" name="spouse_conditions" value="cancer">
+                                Cancer (current or history)
+                            </label>
+                            <label>
+                                <input type="checkbox" name="spouse_conditions" value="stroke">
+                                Stroke (history)
+                            </label>
+                            <label>
+                                <input type="checkbox" name="spouse_conditions" value="kidney_disease">
+                                Kidney Disease
+                            </label>
+                            <label>
+                                <input type="checkbox" name="spouse_conditions" value="copd">
+                                COPD
+                            </label>
+                            <label>
+                                <input type="checkbox" name="spouse_conditions" value="mental_health">
+                                Mental Health Conditions
+                            </label>
+                            <label>
+                                <input type="checkbox" name="spouse_conditions" value="arthritis">
+                                Arthritis
+                            </label>
+                            <label>
+                                <input type="checkbox" name="spouse_conditions" value="sleep_apnea">
+                                Sleep Apnea
+                            </label>
+                            <label>
+                                <input type="checkbox" name="spouse_conditions" value="other" id="spouse_otherConditionCheckbox">
+                                Other
+                            </label>
+                        </div>
+                        <div class="form-group" id="spouse_otherConditionInput" style="display: none; margin-top: 10px;">
+                            <input type="text" name="spouse_otherCondition" id="spouse_otherCondition" placeholder="Please specify other condition">
+                            <span class="error-message"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="spouse_medications">Current Medications</label>
+                        <textarea id="spouse_medications" name="spouse_medications" rows="3" placeholder="List any medications they currently take (optional)"></textarea>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="spouse_surgeries">Past Surgeries or Hospitalizations</label>
+                        <textarea id="spouse_surgeries" name="spouse_surgeries" rows="3" placeholder="List any major surgeries or hospitalizations in the past 5 years (optional)"></textarea>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="spouse_familyHistory">Family Medical History</label>
+                        <textarea id="spouse_familyHistory" name="spouse_familyHistory" rows="3" placeholder="List any significant family medical history (heart disease, cancer, diabetes, etc.) - optional"></textarea>
+                        <span class="error-message"></span>
+                    </div>
+                `;
+                
+                spouseContainer.appendChild(spouseSection);
+                
+                // Add event listener for "other" condition checkbox
+                const otherCheckbox = document.getElementById('spouse_otherConditionCheckbox');
+                const otherInput = document.getElementById('spouse_otherConditionInput');
+                
+                if (otherCheckbox && otherInput) {
+                    otherCheckbox.addEventListener('change', function() {
+                        if (this.checked) {
+                            otherInput.style.display = 'block';
+                            document.getElementById('spouse_otherCondition').required = true;
+                        } else {
+                            otherInput.style.display = 'none';
+                            document.getElementById('spouse_otherCondition').required = false;
+                            document.getElementById('spouse_otherCondition').value = '';
+                        }
+                    });
+                }
             }
         });
 
