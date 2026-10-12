@@ -129,20 +129,21 @@ function evaluateApplication(formData, bmi, healthConditions) {
     // Decision logic - if "other" condition exists, never approve
     if (hasOtherCondition) {
         // With "other" condition, decide between reject and refer based on total risk
-        if (riskScore >= 8 || hasHighRisk) {
+        if (riskScore >= 6 || hasHighRisk) {
             return { status: 'rejected', reasons, riskScore };
         } else {
+            // Always refer if "other" condition and not rejected
             return { status: 'referred', reasons, riskScore };
         }
+    }
+    
+    // Normal evaluation without "other" condition
+    if (riskScore >= 8 || hasHighRisk) {
+        return { status: 'rejected', reasons, riskScore };
+    } else if (riskScore >= 4 || mediumRiskCount >= 2) {
+        return { status: 'referred', reasons, riskScore };
     } else {
-        // Normal evaluation without "other" condition
-        if (riskScore >= 8 || hasHighRisk) {
-            return { status: 'rejected', reasons, riskScore };
-        } else if (riskScore >= 4 || mediumRiskCount >= 2) {
-            return { status: 'referred', reasons, riskScore };
-        } else {
-            return { status: 'approved', reasons: ['Low risk profile'], riskScore };
-        }
+        return { status: 'approved', reasons: ['Low risk profile'], riskScore };
     }
 }
 
