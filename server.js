@@ -204,6 +204,23 @@ function validateFormData(data) {
         errors.push('Weight must be between 20 and 250 kg');
     }
 
+    // Pre-existing conditions validation
+    if (data.preexisting === 'yes') {
+        // Parse health conditions
+        let healthConditions = [];
+        if (data.conditions) {
+            if (Array.isArray(data.conditions)) {
+                healthConditions = data.conditions;
+            } else if (typeof data.conditions === 'string') {
+                healthConditions = data.conditions.split(',').map(c => c.trim()).filter(c => c);
+            }
+        }
+        
+        if (healthConditions.length === 0) {
+            errors.push('Please select at least one health condition when pre-existing conditions is "Yes"');
+        }
+    }
+
     // Terms acceptance
     if (!data.terms || data.terms !== 'true') {
         errors.push('Terms and conditions must be accepted');
