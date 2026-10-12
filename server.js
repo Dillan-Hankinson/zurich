@@ -324,6 +324,15 @@ function validateFormData(data) {
         
         const numDependents = parseInt(data.numDependents) || 0;
         for (let i = 0; i < numDependents; i++) {
+            if (!data[`dependent${i}_fullName`] || !data[`dependent${i}_fullName`].trim()) {
+                errors.push(`Full name is required for dependent ${i + 1}`);
+            }
+            if (!data[`dependent${i}_nino`] || !data[`dependent${i}_nino`].trim()) {
+                errors.push(`National Insurance Number is required for dependent ${i + 1}`);
+            }
+            if (data[`dependent${i}_nino`] && !/^[A-Z]{2}\d{6}[A-D]$/i.test(data[`dependent${i}_nino`].replace(/\s/g, ''))) {
+                errors.push(`Invalid National Insurance Number format for dependent ${i + 1}`);
+            }
             if (!data[`dependent${i}_dob`]) {
                 errors.push(`Date of birth is required for dependent ${i + 1}`);
             }
@@ -344,6 +353,15 @@ function validateFormData(data) {
 
     // Spouse coverage validation
     if (data.coverage === 'spouse') {
+        if (!data.spouse_fullName || !data.spouse_fullName.trim()) {
+            errors.push('Spouse full name is required');
+        }
+        if (!data.spouse_nino || !data.spouse_nino.trim()) {
+            errors.push('Spouse National Insurance Number is required');
+        }
+        if (data.spouse_nino && !/^[A-Z]{2}\d{6}[A-D]$/i.test(data.spouse_nino.replace(/\s/g, ''))) {
+            errors.push('Invalid spouse National Insurance Number format');
+        }
         if (!data.spouse_dob) {
             errors.push('Spouse date of birth is required');
         }
@@ -467,6 +485,9 @@ app.post('/api/submit-application', async (req, res) => {
             const spouseWeight = parseFloat(formData.spouse_weight);
             const spouseBmi = calculateBMI(spouseHeight, spouseWeight);
             
+            // Normalize spouse NI Number
+            const spouseNino = formData.spouse_nino ? formData.spouse_nino.trim().toUpperCase().replace(/\s/g, '') : '';
+            
             let spouseConditions = [];
             if (formData.spouse_conditions) {
                 if (Array.isArray(formData.spouse_conditions)) {
@@ -483,6 +504,8 @@ app.post('/api/submit-application', async (req, res) => {
             }
 
             spouseData = {
+                fullName: formData.spouse_fullName ? formData.spouse_fullName.trim() : '',
+                nationalInsuranceNumber: spouseNino,
                 dateOfBirth: formData.spouse_dob,
                 age: spouseAge,
                 height: spouseHeight,
@@ -492,8 +515,7 @@ app.post('/api/submit-application', async (req, res) => {
                 preexistingConditions: formData.spouse_preexisting === 'yes',
                 conditions: spouseConditions,
                 medications: formData.spouse_medications ? formData.spouse_medications.trim() : '',
-                surgeries: formData.spouse_surgeries ? formData.spouse_surgeries.trim() : '',
-                familyHistory: formData.spouse_familyHistory ? formData.spouse_familyHistory.trim() : ''
+                surgeries: formData.spouse_surgeries ? formData.spouse_surgeries.trim() : ''
             };
         }
 
@@ -508,6 +530,9 @@ app.post('/api/submit-application', async (req, res) => {
                 const depWeight = parseFloat(formData[`dependent${i}_weight`]);
                 const depBmi = calculateBMI(depHeight, depWeight);
                 
+                // Normalize dependent NI Number
+                const depNino = formData[`dependent${i}_nino`] ? formData[`dependent${i}_nino`].trim().toUpperCase().replace(/\s/g, '') : '';
+                
                 let depConditions = [];
                 if (formData[`dependent${i}_conditions`]) {
                     if (Array.isArray(formData[`dependent${i}_conditions`])) {
@@ -519,6 +544,8 @@ app.post('/api/submit-application', async (req, res) => {
 
                 dependents.push({
                     dependentNumber: i + 1,
+                    fullName: formData[`dependent${i}_fullName`] ? formData[`dependent${i}_fullName`].trim() : '',
+                    nationalInsuranceNumber: depNino,
                     dateOfBirth: formData[`dependent${i}_dob`],
                     age: depAge,
                     height: depHeight,
@@ -528,8 +555,7 @@ app.post('/api/submit-application', async (req, res) => {
                     preexistingConditions: formData[`dependent${i}_preexisting`] === 'yes',
                     conditions: depConditions,
                     medications: formData[`dependent${i}_medications`] ? formData[`dependent${i}_medications`].trim() : '',
-                    surgeries: formData[`dependent${i}_surgeries`] ? formData[`dependent${i}_surgeries`].trim() : '',
-                    familyHistory: formData[`dependent${i}_familyHistory`] ? formData[`dependent${i}_familyHistory`].trim() : ''
+                    surgeries: formData[`dependent${i}_surgeries`] ? formData[`dependent${i}_surgeries`].trim() : ''
                 });
             }
         }

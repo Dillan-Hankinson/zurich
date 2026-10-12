@@ -297,6 +297,18 @@
                     <p class="section-description">Please provide accurate health information for your spouse.</p>
 
                     <div class="form-group">
+                        <label for="spouse_fullName">Full Name *</label>
+                        <input type="text" id="spouse_fullName" name="spouse_fullName" required>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="spouse_nino">National Insurance Number *</label>
+                        <input type="text" id="spouse_nino" name="spouse_nino" placeholder="AB123456C" required>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="form-group">
                         <label for="spouse_dob">Date of Birth *</label>
                         <input type="date" id="spouse_dob" name="spouse_dob" required>
                         <span class="error-message"></span>
@@ -411,12 +423,6 @@
                         <textarea id="spouse_surgeries" name="spouse_surgeries" rows="3" placeholder="List any major surgeries or hospitalizations in the past 5 years (optional)"></textarea>
                         <span class="error-message"></span>
                     </div>
-
-                    <div class="form-group">
-                        <label for="spouse_familyHistory">Family Medical History</label>
-                        <textarea id="spouse_familyHistory" name="spouse_familyHistory" rows="3" placeholder="List any significant family medical history (heart disease, cancer, diabetes, etc.) - optional"></textarea>
-                        <span class="error-message"></span>
-                    </div>
                 `;
                 
                 spouseContainer.appendChild(spouseSection);
@@ -455,6 +461,18 @@
                 dependentSection.innerHTML = `
                     <h2>Family Member ${i + 1} - Health Information</h2>
                     <p class="section-description">Please provide accurate health information for family member ${i + 1}.</p>
+
+                    <div class="form-group">
+                        <label for="dependent${i}_fullName">Full Name *</label>
+                        <input type="text" id="dependent${i}_fullName" name="dependent${i}_fullName" required>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dependent${i}_nino">National Insurance Number *</label>
+                        <input type="text" id="dependent${i}_nino" name="dependent${i}_nino" placeholder="AB123456C" required>
+                        <span class="error-message"></span>
+                    </div>
 
                     <div class="form-group">
                         <label for="dependent${i}_dob">Date of Birth *</label>
@@ -569,12 +587,6 @@
                     <div class="form-group">
                         <label for="dependent${i}_surgeries">Past Surgeries or Hospitalizations</label>
                         <textarea id="dependent${i}_surgeries" name="dependent${i}_surgeries" rows="3" placeholder="List any major surgeries or hospitalizations in the past 5 years (optional)"></textarea>
-                        <span class="error-message"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="dependent${i}_familyHistory">Family Medical History</label>
-                        <textarea id="dependent${i}_familyHistory" name="dependent${i}_familyHistory" rows="3" placeholder="List any significant family medical history (heart disease, cancer, diabetes, etc.) - optional"></textarea>
                         <span class="error-message"></span>
                     </div>
                 `;
