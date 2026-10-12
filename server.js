@@ -715,6 +715,54 @@ app.get('/api/applications/:id', async (req, res) => {
     }
 });
 
+// GET endpoint to check if application exists by name and NI number
+app.get('/api/check-application', async (req, res) => {
+    try {
+        const { fullName, nino } = req.query;
+
+        if (!fullName || !nino) {
+            return res.status(400).json({
+                success: false,
+                message: 'Full name and National Insurance Number are required'
+            });
+        }
+
+        // Normalize inputs
+        const normalizedFullName = fullName.trim().toLowerCase();
+        const normalizedNino = nino.trim().toUpperCase().replace(/\s/g, '');
+
+        // Read applications
+        const data = await readApplications();
+
+        // Search for matching application
+        const application = data.applications.find(app => {
+            const appFullName = app.personalInfo.fullName.trim().toLowerCase();
+            const appNino = app.personalInfo.nationalInsuranceNumber;
+            
+            return appFullName === normalizedFullName && appNino === normalizedNino;
+        });
+
+        if (application) {
+            res.json({
+                success: true,
+                application: application
+            });
+        } else {
+            res.json({
+                success: false,
+                message: 'No application found matching the provided details'
+            });
+        }
+    } catch (error) {
+        console.error('Error checking application:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error checking application',
+            error: error.message
+        });
+    }
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({
@@ -730,5 +778,6 @@ app.listen(PORT, () => {
     console.log(`  POST /api/submit-application - Submit new application`);
     console.log(`  GET  /api/applications - Get all applications`);
     console.log(`  GET  /api/applications/:id - Get specific application`);
+    console.log(`  GET  /api/check-application - Check application by name and NI number`);
     console.log(`  GET  /api/health - Health check`);
 });

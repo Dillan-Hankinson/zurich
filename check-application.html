@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Application - Health Insurance</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <button type="button" class="dark-mode-toggle" id="darkModeToggle">
+        <span id="darkModeIcon">🌙</span>
+        <span id="darkModeText">Dark Mode</span>
+    </button>
+    <div class="container">
+        <h1>Check Existing Application</h1>
+        
+        <div style="text-align: center; margin-bottom: 20px;">
+            <a href="index.html" style="color: var(--input-focus); text-decoration: none;">← Back to New Application</a>
+        </div>
+
+        <p class="section-description" style="text-align: center; margin-bottom: 30px;">
+            Enter your details to check the status of your existing application.
+        </p>
+
+        <form id="checkApplicationForm" novalidate>
+            <div class="form-group">
+                <label for="checkFullName">Full Name *</label>
+                <input type="text" id="checkFullName" name="fullName" required>
+                <span class="error-message"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="checkNino">National Insurance Number *</label>
+                <input type="text" id="checkNino" name="nino" placeholder="AB123456C" required>
+                <span class="error-message"></span>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">Check Application Status</button>
+            </div>
+        </form>
+
+        <div id="applicationResult" style="display: none; margin-top: 30px;">
+            <div class="health-section">
+                <h2>Application Found</h2>
+                <div id="resultContent"></div>
+            </div>
+        </div>
+
+        <div id="noApplicationFound" style="display: none; margin-top: 30px;">
+            <div style="background: #fff3cd; border: 2px solid #f39c12; padding: 20px; border-radius: 8px; text-align: center;">
+                <h3 style="color: #856404; margin-top: 0;">No Application Found</h3>
+                <p style="color: #856404;">We couldn't find an application matching the details you provided.</p>
+                <p style="color: #856404;">Please check your information and try again, or submit a new application.</p>
+                <a href="index.html" class="btn-submit" style="text-decoration: none; display: inline-block; margin-top: 15px;">Submit New Application</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="dark-mode.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('checkApplicationForm');
+            const applicationResult = document.getElementById('applicationResult');
+            const noApplicationFound = document.getElementById('noApplicationFound');
+            const resultContent = document.getElementById('resultContent');
+
+            // Validation
+            const validators = {
+                fullName: (value) => {
+                    if (!value.trim()) return 'Full name is required';
+                    if (value.trim().length < 2) return 'Name must be at least 2 characters';
+                    return '';
+                },
+                nino: (value) => {
+                    if (!value.trim()) return 'National Insurance Number is required';
+                    const ninoRegex = /^[A-Z]{2}\d{6}[A-D]$/i;
+                    if (!ninoRegex.test(value.replace(/\s/g, ''))) return 'NI Number must be in format AB123456C';
+                    return '';
+                }
+            };
+
+            function validateField(field) {
+                const fieldName = field.name;
+                const value = field.value;
+                const validator = validators[fieldName];
+                
+                if (!validator) return true;
+
+                const errorMessage = validator(value);
+                const errorSpan = field.closest('.form-group').querySelector('.error-message');
+                
+                if (errorMessage) {
+                    field.classList.add('invalid');
+                    field.classList.remove('valid');
+                    if (errorSpan) errorSpan.textContent = errorMessage;
+                    return false;
+                } else {
+                    field.classList.remove('invalid');
+                    field.classList.add('valid');
+                    if (errorSpan) errorSpan.textContent = '';
+                    return true;
+                }
+            }
+
+            // Add real-time validation
+            const inputs = form.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    validateField(this);
+                });
+                
+                input.addEventListener('input', function() {
+                    if (this.classList.contains('invalid')) {
+                        validateField(this);
+                    }
+                });
+            });
+
+            // Form submission
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                let isValid = true;
+                inputs.forEach(input => {
+                    if (!validateField(input)) {
+                        isValid = false;
+                    }
+                });
+
+                if (isValid) {
+                    const fullName = document.getElementById('checkFullName').value.trim();
+                    const nino = document.getElementById('checkNino').value.trim().toUpperCase().replace(/\s/g, '');
+
+                    // Hide previous results
+                    applicationResult.style.display = 'none';
+                    noApplicationFound.style.display = 'none';
+
+                    // Search for application
+                    fetch(`http://localhost:3000/api/check-application?fullName=${encodeURIComponent(fullName)}&nino=${encodeURIComponent(nino)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success && data.application) {
+                                const app = data.application;
+                                
+                                // Format status badge
+                                let statusBadge = '';
+                                let statusColor = '';
+                                if (app.status === 'approved') {
+                                    statusBadge = '✓ APPROVED';
+                                    statusColor = '#27ae60';
+                                } else if (app.status === 'rejected') {
+                                    statusBadge = '✗ REJECTED';
+                                    statusColor = '#e74c3c';
+                                } else if (app.status === 'referred') {
+                                    statusBadge = '⚠ REFERRED';
+                                    statusColor = '#f39c12';
+                                } else {
+                                    statusBadge = 'PENDING';
+                                    statusColor = '#3498db';
+                                }
+
+                                let html = `
+                                    <div style="text-align: center; margin-bottom: 20px;">
+                                        <div style="display: inline-block; background: ${statusColor}; color: white; padding: 10px 30px; border-radius: 50px; font-size: 18px; font-weight: bold;">${statusBadge}</div>
+                                    </div>
+                                    <div style="background: var(--input-bg); padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                                        <strong>Application ID:</strong> ${app.applicationId}<br>
+                                        <strong>Submitted:</strong> ${new Date(app.submissionDate).toLocaleDateString('en-GB')}<br>
+                                        ${app.lastUpdated ? `<strong>Last Updated:</strong> ${new Date(app.lastUpdated).toLocaleDateString('en-GB')}<br>` : ''}
+                                        <strong>Coverage Type:</strong> ${app.coverage.type.charAt(0).toUpperCase() + app.coverage.type.slice(1)}
+                                    </div>
+                                `;
+
+                                if (app.status === 'approved' && app.quote) {
+                                    html += `
+                                        <div style="background: #d4edda; border: 2px solid #27ae60; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                                            <h3 style="color: #27ae60; margin-top: 0;">Your Quote</h3>
+                                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                                <div>
+                                                    <strong>Monthly Premium:</strong><br>
+                                                    <span style="font-size: 24px; color: #27ae60;">£${app.quote.monthlyPremium}</span>
+                                                </div>
+                                                <div>
+                                                    <strong>Annual Premium:</strong><br>
+                                                    <span style="font-size: 24px; color: #27ae60;">£${app.quote.annualPremiumWithDiscount}</span><br>
+                                                    <small>Save £${app.quote.annualSavings}/year</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                }
+
+                                if (app.evaluationDetails && app.evaluationDetails.reasons) {
+                                    html += `
+                                        <div style="background: var(--input-bg); padding: 15px; border-radius: 5px;">
+                                            <strong>Evaluation Details:</strong><br>
+                                            <strong>Risk Score:</strong> ${app.evaluationDetails.riskScore}<br>
+                                            <strong>Reasons:</strong>
+                                            <ul style="margin: 10px 0; padding-left: 20px;">
+                                                ${app.evaluationDetails.reasons.map(reason => `<li>${reason}</li>`).join('')}
+                                            </ul>
+                                        </div>
+                                    `;
+                                }
+
+                                resultContent.innerHTML = html;
+                                applicationResult.style.display = 'block';
+                            } else {
+                                noApplicationFound.style.display = 'block';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('An error occurred while checking your application. Please ensure the server is running and try again.');
+                        });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
