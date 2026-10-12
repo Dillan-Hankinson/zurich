@@ -44,8 +44,8 @@ function calculateBMI(heightCm, weightKg) {
     return (weightKg / (heightM * heightM)).toFixed(1);
 }
 
-// Evaluate application and determine status
-function evaluateApplication(formData, bmi, healthConditions) {
+// Evaluate a single person's risk
+function evaluatePerson(age, bmi, smoking, preexisting, healthConditions, personLabel) {
     const reasons = [];
     let riskScore = 0;
 
@@ -55,47 +55,45 @@ function evaluateApplication(formData, bmi, healthConditions) {
     );
     let otherConditionPenalty = 0;
     if (hasOtherCondition) {
-        otherConditionPenalty = 3; // Add significant risk for "other" condition
-        reasons.push('Other health condition requires manual review');
+        otherConditionPenalty = 3;
+        reasons.push(`${personLabel}: Other health condition requires manual review`);
     }
 
     // Age evaluation
-    const dob = new Date(formData.dob);
-    const age = new Date().getFullYear() - dob.getFullYear();
     if (age > 65) {
         riskScore += 2;
-        reasons.push('Age over 65');
+        reasons.push(`${personLabel}: Age over 65`);
     } else if (age > 50) {
         riskScore += 1;
-        reasons.push('Age over 50');
+        reasons.push(`${personLabel}: Age over 50`);
     }
 
     // BMI evaluation
     const bmiValue = parseFloat(bmi);
     if (bmiValue < 18.5) {
         riskScore += 2;
-        reasons.push('BMI below healthy range (underweight)');
+        reasons.push(`${personLabel}: BMI below healthy range (underweight)`);
     } else if (bmiValue >= 30) {
         riskScore += 2;
-        reasons.push('BMI indicates obesity');
+        reasons.push(`${personLabel}: BMI indicates obesity`);
     } else if (bmiValue >= 25) {
         riskScore += 1;
-        reasons.push('BMI indicates overweight');
+        reasons.push(`${personLabel}: BMI indicates overweight`);
     }
 
     // Smoking status
-    if (formData.smoking === 'current') {
+    if (smoking === 'current') {
         riskScore += 3;
-        reasons.push('Current smoker');
-    } else if (formData.smoking === 'former') {
+        reasons.push(`${personLabel}: Current smoker`);
+    } else if (smoking === 'former') {
         riskScore += 1;
-        reasons.push('Former smoker');
+        reasons.push(`${personLabel}: Former smoker`);
     }
 
     // Pre-existing conditions
-    if (formData.preexisting === 'yes') {
+    if (preexisting === 'yes') {
         riskScore += 2;
-        reasons.push('Has pre-existing conditions');
+        reasons.push(`${personLabel}: Has pre-existing conditions`);
     }
 
     // High-risk health conditions
@@ -109,41 +107,104 @@ function evaluateApplication(formData, bmi, healthConditions) {
         if (highRiskConditions.includes(condition)) {
             hasHighRisk = true;
             riskScore += 3;
-            reasons.push(`High-risk condition: ${condition.replace('_', ' ')}`);
+            reasons.push(`${personLabel}: High-risk condition: ${condition.replace('_', ' ')}`);
         } else if (mediumRiskConditions.includes(condition)) {
             mediumRiskCount++;
             riskScore += 1;
-            reasons.push(`Medium-risk condition: ${condition.replace('_', ' ')}`);
+            reasons.push(`${personLabel}: Medium-risk condition: ${condition.replace('_', ' ')}`);
         }
     });
 
     // Multiple conditions increase risk
     if (healthConditions.length >= 3) {
         riskScore += 2;
-        reasons.push('Multiple health conditions');
+        reasons.push(`${personLabel}: Multiple health conditions`);
     }
 
     // Add "other" condition penalty to risk score
     riskScore += otherConditionPenalty;
 
-    // Decision logic - if "other" condition exists, never approve
-    if (hasOtherCondition) {
-        // With "other" condition, decide between reject and refer based on total risk
-        if (riskScore >= 6 || hasHighRisk) {
-            return { status: 'rejected', reasons, riskScore };
+    return { riskScore, reasons, hasHighRisk, hasOtherCondition, mediumRiskCount };
+}
+
+// Evaluate application and determine status
+function evaluateApplication(formData, bmi, healthConditions) {
+    const allReasons = [];
+    let totalRiskScore = 0;
+    let hasAnyHighRisk = false;
+    let hasAnyOtherCondition = false;
+    let totalMediumRiskCount = 0;
+    let numPeople = 1;
+
+    // Evaluate primary applicant
+    const dob = new Date(formData.dob);
+    const age = new Date().getFullYear() - dob.getFullYear();
+    const primaryEval = evaluatePerson(age, bmi, formData.smoking, formData.preexisting, healthConditions, 'Primary applicant');
+    
+    totalRiskScore += primaryEval.riskScore;
+    allReasons.push(...primaryEval.reasons);
+    hasAnyHighRisk = hasAnyHighRisk || primaryEval.hasHighRisk;
+    hasAnyOtherCondition = hasAnyOtherCondition || primaryEval.hasOtherCondition;
+    totalMediumRiskCount += primaryEval.mediumRiskCount;
+
+    // Evaluate dependents for family coverage
+    if (formData.coverage === 'family' && formData.numDependents) {
+        const numDependents = parseInt(formData.numDependents);
+        numPeople += numDependents;
+
+        for (let i = 0; i < numDependents; i++) {
+            const depAge = parseInt(formData[`dependent${i}_age`]) || 0;
+            const depHeight = parseFloat(formData[`dependent${i}_height`]) || 0;
+            const depWeight = parseFloat(formData[`dependent${i}_weight`]) || 0;
+            const depBmi = calculateBMI(depHeight, depWeight);
+            const depSmoking = formData[`dependent${i}_smoking`] || 'never';
+            const depPreexisting = formData[`dependent${i}_preexisting`] || 'no';
+            
+            // Parse dependent health conditions
+            let depConditions = [];
+            if (formData[`dependent${i}_conditions`]) {
+                if (Array.isArray(formData[`dependent${i}_conditions`])) {
+                    depConditions = formData[`dependent${i}_conditions`];
+                } else if (typeof formData[`dependent${i}_conditions`] === 'string') {
+                    depConditions = formData[`dependent${i}_conditions`].split(',').map(c => c.trim()).filter(c => c);
+                }
+            }
+
+            const depEval = evaluatePerson(depAge, depBmi, depSmoking, depPreexisting, depConditions, `Dependent ${i + 1}`);
+            
+            totalRiskScore += depEval.riskScore;
+            allReasons.push(...depEval.reasons);
+            hasAnyHighRisk = hasAnyHighRisk || depEval.hasHighRisk;
+            hasAnyOtherCondition = hasAnyOtherCondition || depEval.hasOtherCondition;
+            totalMediumRiskCount += depEval.mediumRiskCount;
+        }
+    }
+
+    // Calculate average risk score
+    const averageRiskScore = totalRiskScore / numPeople;
+    const roundedAvgRisk = Math.round(averageRiskScore * 10) / 10;
+
+    // Add summary reason
+    if (numPeople > 1) {
+        allReasons.unshift(`Family coverage: ${numPeople} people, average risk score: ${roundedAvgRisk}`);
+    }
+
+    // Decision logic - if any "other" condition exists, never approve
+    if (hasAnyOtherCondition) {
+        if (averageRiskScore >= 6 || hasAnyHighRisk) {
+            return { status: 'rejected', reasons: allReasons, riskScore: roundedAvgRisk };
         } else {
-            // Always refer if "other" condition and not rejected
-            return { status: 'referred', reasons, riskScore };
+            return { status: 'referred', reasons: allReasons, riskScore: roundedAvgRisk };
         }
     }
     
     // Normal evaluation without "other" condition
-    if (riskScore >= 8 || hasHighRisk) {
-        return { status: 'rejected', reasons, riskScore };
-    } else if (riskScore >= 4 || mediumRiskCount >= 2) {
-        return { status: 'referred', reasons, riskScore };
+    if (averageRiskScore >= 8 || hasAnyHighRisk) {
+        return { status: 'rejected', reasons: allReasons, riskScore: roundedAvgRisk };
+    } else if (averageRiskScore >= 4 || totalMediumRiskCount >= 2) {
+        return { status: 'referred', reasons: allReasons, riskScore: roundedAvgRisk };
     } else {
-        return { status: 'approved', reasons: ['Low risk profile'], riskScore };
+        return { status: 'approved', reasons: ['Low risk profile'], riskScore: roundedAvgRisk };
     }
 }
 
@@ -168,6 +229,32 @@ function validateFormData(data) {
     for (const field of requiredFields) {
         if (!data[field] || (typeof data[field] === 'string' && !data[field].trim())) {
             errors.push(`${field} is required`);
+        }
+    }
+
+    // Family coverage validation
+    if (data.coverage === 'family') {
+        if (!data.numDependents || parseInt(data.numDependents) < 1) {
+            errors.push('Number of dependents is required for family coverage');
+        }
+        
+        const numDependents = parseInt(data.numDependents) || 0;
+        for (let i = 0; i < numDependents; i++) {
+            if (!data[`dependent${i}_age`]) {
+                errors.push(`Age is required for dependent ${i + 1}`);
+            }
+            if (!data[`dependent${i}_height`]) {
+                errors.push(`Height is required for dependent ${i + 1}`);
+            }
+            if (!data[`dependent${i}_weight`]) {
+                errors.push(`Weight is required for dependent ${i + 1}`);
+            }
+            if (!data[`dependent${i}_smoking`]) {
+                errors.push(`Smoking status is required for dependent ${i + 1}`);
+            }
+            if (!data[`dependent${i}_preexisting`]) {
+                errors.push(`Pre-existing conditions status is required for dependent ${i + 1}`);
+            }
         }
     }
 
@@ -262,6 +349,40 @@ app.post('/api/submit-application', async (req, res) => {
         // Evaluate application
         const evaluation = evaluateApplication(formData, bmi, healthConditions);
 
+        // Build dependents array for family coverage
+        const dependents = [];
+        if (formData.coverage === 'family' && formData.numDependents) {
+            const numDependents = parseInt(formData.numDependents);
+            for (let i = 0; i < numDependents; i++) {
+                const depHeight = parseFloat(formData[`dependent${i}_height`]);
+                const depWeight = parseFloat(formData[`dependent${i}_weight`]);
+                const depBmi = calculateBMI(depHeight, depWeight);
+                
+                let depConditions = [];
+                if (formData[`dependent${i}_conditions`]) {
+                    if (Array.isArray(formData[`dependent${i}_conditions`])) {
+                        depConditions = formData[`dependent${i}_conditions`];
+                    } else if (typeof formData[`dependent${i}_conditions`] === 'string') {
+                        depConditions = formData[`dependent${i}_conditions`].split(',').map(c => c.trim()).filter(c => c);
+                    }
+                }
+
+                dependents.push({
+                    dependentNumber: i + 1,
+                    age: parseInt(formData[`dependent${i}_age`]),
+                    height: depHeight,
+                    weight: depWeight,
+                    bmi: parseFloat(depBmi),
+                    smokingStatus: formData[`dependent${i}_smoking`],
+                    preexistingConditions: formData[`dependent${i}_preexisting`] === 'yes',
+                    conditions: depConditions,
+                    medications: formData[`dependent${i}_medications`] ? formData[`dependent${i}_medications`].trim() : '',
+                    surgeries: formData[`dependent${i}_surgeries`] ? formData[`dependent${i}_surgeries`].trim() : '',
+                    familyHistory: formData[`dependent${i}_familyHistory`] ? formData[`dependent${i}_familyHistory`].trim() : ''
+                });
+            }
+        }
+
         // Create application object
         const application = {
             applicationId: generateApplicationId(),
@@ -287,7 +408,8 @@ app.post('/api/submit-application', async (req, res) => {
             },
             coverage: {
                 type: formData.coverage,
-                preexistingConditions: formData.preexisting === 'yes'
+                preexistingConditions: formData.preexisting === 'yes',
+                numDependents: formData.coverage === 'family' ? parseInt(formData.numDependents) : 0
             },
             healthInfo: {
                 height: parseFloat(formData.height),
@@ -299,6 +421,7 @@ app.post('/api/submit-application', async (req, res) => {
                 surgeries: formData.surgeries ? formData.surgeries.trim() : '',
                 familyHistory: formData.familyHistory ? formData.familyHistory.trim() : ''
             },
+            dependents: dependents,
             termsAccepted: true,
             termsAcceptedDate: new Date().toISOString()
         };
