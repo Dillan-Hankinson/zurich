@@ -49,13 +49,14 @@ function evaluateApplication(formData, bmi, healthConditions) {
     const reasons = [];
     let riskScore = 0;
 
-    // Check for "other" condition - automatic referral
+    // Check for "other" condition - never approve, only reject or refer
     const hasOtherCondition = healthConditions.some(condition => 
         condition.toLowerCase().includes('other:')
     );
+    let otherConditionPenalty = 0;
     if (hasOtherCondition) {
+        otherConditionPenalty = 3; // Add significant risk for "other" condition
         reasons.push('Other health condition requires manual review');
-        return { status: 'referred', reasons, riskScore: 'N/A' };
     }
 
     // Age evaluation
@@ -122,13 +123,26 @@ function evaluateApplication(formData, bmi, healthConditions) {
         reasons.push('Multiple health conditions');
     }
 
-    // Decision logic
-    if (riskScore >= 8 || hasHighRisk) {
-        return { status: 'rejected', reasons, riskScore };
-    } else if (riskScore >= 4 || mediumRiskCount >= 2) {
-        return { status: 'referred', reasons, riskScore };
+    // Add "other" condition penalty to risk score
+    riskScore += otherConditionPenalty;
+
+    // Decision logic - if "other" condition exists, never approve
+    if (hasOtherCondition) {
+        // With "other" condition, decide between reject and refer based on total risk
+        if (riskScore >= 8 || hasHighRisk) {
+            return { status: 'rejected', reasons, riskScore };
+        } else {
+            return { status: 'referred', reasons, riskScore };
+        }
     } else {
-        return { status: 'approved', reasons: ['Low risk profile'], riskScore };
+        // Normal evaluation without "other" condition
+        if (riskScore >= 8 || hasHighRisk) {
+            return { status: 'rejected', reasons, riskScore };
+        } else if (riskScore >= 4 || mediumRiskCount >= 2) {
+            return { status: 'referred', reasons, riskScore };
+        } else {
+            return { status: 'approved', reasons: ['Low risk profile'], riskScore };
+        }
     }
 }
 
