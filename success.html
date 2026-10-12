@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Submitted - Health Insurance</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="success-message">
+            <h2>Application Submitted Successfully!</h2>
+            <p id="successText">Thank you for your health insurance application. We will review your information and contact you shortly.</p>
+        </div>
+        
+        <div style="text-align: center; padding: 20px;">
+            <a href="index.html" class="btn-submit" style="text-decoration: none; display: inline-block;">Submit Another Application</a>
+        </div>
+    </div>
+
+    <script>
+        // Get application ID from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const applicationId = urlParams.get('id');
+        const submissionDate = urlParams.get('date');
+
+        if (applicationId) {
+            const successText = document.getElementById('successText');
+            successText.innerHTML = `Thank you for your health insurance application.<br>Your application ID is: <strong>${applicationId}</strong><br>We will review your information and contact you shortly.`;
+        }
+    </script>
+</body>
+</html>

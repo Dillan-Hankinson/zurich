@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('insuranceForm');
-    const successMessage = document.getElementById('successMessage');
+    
+    // Exit if form doesn't exist (e.g., on success page)
+    if (!form) return;
 
     // Validation rules
     const validators = {
@@ -247,23 +249,8 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Hide form and show success message
-                    form.style.display = 'none';
-                    successMessage.style.display = 'block';
-                    document.getElementById('resubmitSection').style.display = 'block';
-                    
-                    // Update success message with application ID
-                    const successTitle = successMessage.querySelector('h2');
-                    const successText = successMessage.querySelector('p');
-                    successTitle.textContent = 'Application Submitted Successfully!';
-                    successText.innerHTML = `Thank you for your health insurance application.<br>Your application ID is: <strong>${data.applicationId}</strong><br>We will review your information and contact you shortly.`;
-                    
-                    // Scroll to top to show success message
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                    
-                    console.log('Application submitted successfully!');
-                    console.log('Application ID:', data.applicationId);
-                    console.log('Submission Date:', data.submissionDate);
+                    // Redirect to success page with application ID
+                    window.location.href = `success.html?id=${data.applicationId}&date=${encodeURIComponent(data.submissionDate)}`;
                 } else {
                     alert('Error submitting application: ' + (data.errors ? data.errors.join(', ') : data.message));
                 }
@@ -292,32 +279,4 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 0);
     });
 
-    // Submit another application button
-    const submitAnotherBtn = document.getElementById('submitAnotherBtn');
-    const resubmitSection = document.getElementById('resubmitSection');
-    
-    if (submitAnotherBtn) {
-        submitAnotherBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Reset the form
-            form.reset();
-            
-            // Clear all validation states
-            inputs.forEach(input => {
-                input.classList.remove('valid', 'invalid');
-                const errorSpan = input.closest('.form-group')?.querySelector('.error-message');
-                if (errorSpan) errorSpan.textContent = '';
-            });
-            
-            // Show form and hide success message
-            successMessage.style.display = 'none';
-            if (resubmitSection) resubmitSection.style.display = 'none';
-            form.style.display = 'block';
-            
-            // Scroll to top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-    }
 });
