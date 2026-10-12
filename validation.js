@@ -142,9 +142,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Handle "None of the Above" checkbox logic
+    // Handle "None of the Above" and "Other" checkbox logic
     const conditionCheckboxes = document.querySelectorAll('input[name="conditions"]');
     const noneCheckbox = document.querySelector('input[name="conditions"][value="none"]');
+    const otherCheckbox = document.getElementById('otherConditionCheckbox');
+    const otherConditionInput = document.getElementById('otherConditionInput');
+    const otherConditionField = document.getElementById('otherCondition');
     
     conditionCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change', function() {
@@ -153,9 +156,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 conditionCheckboxes.forEach(cb => {
                     if (cb.value !== 'none') cb.checked = false;
                 });
+                // Hide other input
+                if (otherConditionInput) otherConditionInput.style.display = 'none';
+                if (otherConditionField) otherConditionField.value = '';
             } else if (this.value !== 'none' && this.checked) {
                 // Uncheck "None of the Above"
                 if (noneCheckbox) noneCheckbox.checked = false;
+            }
+            
+            // Show/hide "Other" text input
+            if (this.value === 'other') {
+                if (this.checked) {
+                    otherConditionInput.style.display = 'block';
+                } else {
+                    otherConditionInput.style.display = 'none';
+                    otherConditionField.value = '';
+                }
             }
         });
     });
@@ -212,6 +228,13 @@ document.addEventListener('DOMContentLoaded', function() {
             // Collect health conditions
             const selectedConditions = Array.from(document.querySelectorAll('input[name="conditions"]:checked'))
                 .map(cb => cb.value);
+            
+            // Add "other" condition text if specified
+            const otherConditionText = document.getElementById('otherCondition').value;
+            if (selectedConditions.includes('other') && otherConditionText.trim()) {
+                const otherIndex = selectedConditions.indexOf('other');
+                selectedConditions[otherIndex] = `other: ${otherConditionText.trim()}`;
+            }
 
             // Prepare form data for submission
             const formData = new FormData(form);
