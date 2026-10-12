@@ -289,16 +289,37 @@ app.post('/api/submit-application', async (req, res) => {
         // Read existing applications
         const data = await readApplications();
 
-        // Add new application
-        data.applications.push(application);
+        // Check if application with same National Insurance Number already exists
+        const normalizedNino = formData.nino.trim().toUpperCase().replace(/\s/g, '');
+        const existingIndex = data.applications.findIndex(
+            app => app.personalInfo.nationalInsuranceNumber === normalizedNino
+        );
+
+        let isUpdate = false;
+        if (existingIndex !== -1) {
+            // Update existing application, preserve original ID and submission date
+            const originalId = data.applications[existingIndex].applicationId;
+            const originalSubmissionDate = data.applications[existingIndex].submissionDate;
+            
+            application.applicationId = originalId;
+            application.submissionDate = originalSubmissionDate;
+            application.lastUpdated = new Date().toISOString();
+            
+            data.applications[existingIndex] = application;
+            isUpdate = true;
+        } else {
+            // Add new application
+            data.applications.push(application);
+        }
 
         // Write back to file
         await writeApplications(data);
 
         // Log success
-        console.log(`New application submitted: ${application.applicationId}`);
+        console.log(`Application ${isUpdate ? 'updated' : 'submitted'}: ${application.applicationId}`);
         console.log(`Applicant: ${application.personalInfo.fullName}`);
         console.log(`Email: ${application.personalInfo.email}`);
+        console.log(`NI Number: ${application.personalInfo.nationalInsuranceNumber}`);
         console.log(`BMI: ${application.healthInfo.bmi}`);
         console.log(`Status: ${application.status.toUpperCase()}`);
         console.log(`Risk Score: ${evaluation.riskScore}`);
@@ -307,9 +328,11 @@ app.post('/api/submit-application', async (req, res) => {
         // Send success response
         res.json({
             success: true,
-            message: 'Application submitted successfully',
+            message: isUpdate ? 'Application updated successfully' : 'Application submitted successfully',
             applicationId: application.applicationId,
             submissionDate: application.submissionDate,
+            lastUpdated: application.lastUpdated,
+            isUpdate: isUpdate,
             status: application.status,
             evaluationDetails: application.evaluationDetails
         });
