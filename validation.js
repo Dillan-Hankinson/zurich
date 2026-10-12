@@ -256,6 +256,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     successTitle.textContent = 'Application Submitted Successfully!';
                     successText.innerHTML = `Thank you for your health insurance application.<br>Your application ID is: <strong>${data.applicationId}</strong><br>We will review your information and contact you shortly.`;
                     
+                    // Scroll to top to show success message
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    
                     console.log('Application submitted successfully!');
                     console.log('Application ID:', data.applicationId);
                     console.log('Submission Date:', data.submissionDate);
@@ -286,4 +289,27 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }, 0);
     });
+
+    // Submit another application button
+    const submitAnotherBtn = document.getElementById('submitAnotherBtn');
+    if (submitAnotherBtn) {
+        submitAnotherBtn.addEventListener('click', function() {
+            // Reset the form
+            form.reset();
+            
+            // Clear all validation states
+            inputs.forEach(input => {
+                input.classList.remove('valid', 'invalid');
+                const errorSpan = input.closest('.form-group')?.querySelector('.error-message');
+                if (errorSpan) errorSpan.textContent = '';
+            });
+            
+            // Show form and hide success message
+            successMessage.style.display = 'none';
+            form.style.display = 'block';
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
 });
