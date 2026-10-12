@@ -252,17 +252,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (isValid) {
-            // Collect health conditions
-            const selectedConditions = Array.from(document.querySelectorAll('input[name="conditions"]:checked'))
-                .map(cb => cb.value);
-            
-            // Add "other" condition text if specified
-            const otherConditionText = document.getElementById('otherCondition').value;
-            if (selectedConditions.includes('other') && otherConditionText.trim()) {
-                const otherIndex = selectedConditions.indexOf('other');
-                selectedConditions[otherIndex] = `other: ${otherConditionText.trim()}`;
-            }
-
             // Prepare form data for submission
             const formData = new FormData(form);
             const jsonData = {};
@@ -280,10 +269,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // Add conditions if not already added
-            if (!jsonData.conditions) {
-                jsonData.conditions = selectedConditions;
+            // Collect health conditions and handle "other" condition
+            const selectedConditions = Array.from(document.querySelectorAll('input[name="conditions"]:checked'))
+                .map(cb => cb.value);
+            
+            // Replace "other" with detailed text if specified
+            const otherConditionText = document.getElementById('otherCondition').value;
+            if (selectedConditions.includes('other') && otherConditionText.trim()) {
+                const otherIndex = selectedConditions.indexOf('other');
+                selectedConditions[otherIndex] = `other: ${otherConditionText.trim()}`;
             }
+
+            // Override conditions with the modified array
+            jsonData.conditions = selectedConditions;
 
             // Convert terms checkbox to string
             jsonData.terms = document.getElementById('terms').checked ? 'true' : 'false';
