@@ -86,17 +86,40 @@ document.addEventListener('DOMContentLoaded', function() {
         },
 
         height: (value) => {
-            if (!value) return 'Height is required';
-            const height = parseInt(value);
-            if (height < 90 || height > 250) return 'Please enter a valid height (90-250 cm)';
-            return '';
+            const heightUnit = document.getElementById('heightUnit');
+            if (heightUnit && heightUnit.value === 'ft') {
+                const feet = parseFloat(document.getElementById('heightFeet').value);
+                const inches = parseFloat(document.getElementById('heightInches').value);
+                if (isNaN(feet) || feet < 3 || feet > 8) return 'Please enter valid feet (3-8)';
+                if (isNaN(inches) || inches < 0 || inches > 11) return 'Please enter valid inches (0-11)';
+                return '';
+            } else {
+                if (!value) return 'Height is required';
+                const height = parseFloat(value);
+                if (height < 90 || height > 250) return 'Please enter a valid height (90-250 cm)';
+                return '';
+            }
         },
 
         weight: (value) => {
-            if (!value) return 'Weight is required';
-            const weight = parseInt(value);
-            if (weight < 20 || weight > 250) return 'Please enter a valid weight (20-250 kg)';
-            return '';
+            const weightUnit = document.getElementById('weightUnit');
+            if (weightUnit && weightUnit.value === 'st') {
+                const stone = parseFloat(document.getElementById('weightStoneValue').value);
+                const pounds = parseFloat(document.getElementById('weightPounds').value);
+                if (isNaN(stone) || stone < 3 || stone > 40) return 'Please enter valid stone (3-40)';
+                if (isNaN(pounds) || pounds < 0 || pounds > 13) return 'Please enter valid pounds (0-13)';
+                return '';
+            } else if (weightUnit && weightUnit.value === 'lbs') {
+                if (!value) return 'Weight is required';
+                const weight = parseFloat(value);
+                if (weight < 44 || weight > 551) return 'Please enter a valid weight (44-551 lbs)';
+                return '';
+            } else {
+                if (!value) return 'Weight is required';
+                const weight = parseFloat(value);
+                if (weight < 20 || weight > 250) return 'Please enter a valid weight (20-250 kg)';
+                return '';
+            }
         },
 
         smoking: (value) => {
@@ -285,6 +308,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Convert terms checkbox to string
             jsonData.terms = document.getElementById('terms').checked ? 'true' : 'false';
+
+            // Ensure height and weight are in metric units (cm and kg)
+            if (typeof window.getHeightInCm === 'function') {
+                jsonData.height = window.getHeightInCm();
+            }
+            if (typeof window.getWeightInKg === 'function') {
+                jsonData.weight = window.getWeightInKg();
+            }
 
             // Submit to backend
             fetch('http://localhost:3000/api/submit-application', {
