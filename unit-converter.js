@@ -48,13 +48,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Handle height unit change
     if (heightUnit) {
-        heightUnit.addEventListener('change', function() {
+        const heightCmContainer = document.getElementById('heightCmContainer');
+        const heightUnitAlt = document.getElementById('heightUnitAlt');
+        
+        // Sync both unit selectors
+        const syncHeightUnits = function(sourceSelect) {
+            const value = sourceSelect.value;
             const currentValue = parseFloat(heightInput.value);
             
-            if (this.value === 'ft') {
+            if (value === 'ft') {
                 // Show feet/inches inputs
+                heightCmContainer.style.display = 'none';
                 heightFeetInches.style.display = 'block';
-                heightInput.style.display = 'none';
                 
                 // Convert cm to feet/inches if there's a value
                 if (currentValue && !isNaN(currentValue)) {
@@ -67,10 +72,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 heightInput.removeAttribute('required');
                 heightFeet.setAttribute('required', 'required');
                 heightInches.setAttribute('required', 'required');
+                
+                // Sync other selector
+                if (heightUnitAlt) heightUnitAlt.value = 'ft';
+                heightUnit.value = 'ft';
             } else {
                 // Show cm input
+                heightCmContainer.style.display = 'flex';
                 heightFeetInches.style.display = 'none';
-                heightInput.style.display = 'block';
                 
                 // Convert feet/inches to cm if there are values
                 const feet = parseFloat(heightFeet.value);
@@ -83,8 +92,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 heightInput.setAttribute('required', 'required');
                 heightFeet.removeAttribute('required');
                 heightInches.removeAttribute('required');
+                
+                // Sync other selector
+                if (heightUnitAlt) heightUnitAlt.value = 'cm';
+                heightUnit.value = 'cm';
             }
+        };
+        
+        heightUnit.addEventListener('change', function() {
+            syncHeightUnits(this);
         });
+        
+        if (heightUnitAlt) {
+            heightUnitAlt.addEventListener('change', function() {
+                syncHeightUnits(this);
+            });
+        }
 
         // Update hidden cm value when feet/inches change
         if (heightFeet && heightInches) {
@@ -103,22 +126,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Handle weight unit change
     if (weightUnit) {
-        weightUnit.addEventListener('change', function() {
+        const weightKgContainer = document.getElementById('weightKgContainer');
+        const weightUnitAlt = document.getElementById('weightUnitAlt');
+        
+        // Sync both unit selectors
+        const syncWeightUnits = function(sourceSelect) {
+            const value = sourceSelect.value;
             const currentValue = parseFloat(weightInput.value);
             
-            if (this.value === 'lbs') {
+            if (value === 'lbs') {
                 // Convert kg to lbs
+                weightKgContainer.style.display = 'flex';
                 weightStone.style.display = 'none';
-                weightInput.style.display = 'block';
                 
                 if (currentValue && !isNaN(currentValue)) {
                     // If current unit was stone, convert from stone to kg first
-                    if (weightStone.style.display !== 'none') {
+                    const prevUnit = weightUnit.getAttribute('data-prev-unit');
+                    if (prevUnit === 'st') {
                         const stone = parseFloat(weightStoneValue.value) || 0;
                         const pounds = parseFloat(weightPounds.value) || 0;
                         const kg = stoneToKg(stone, pounds);
                         weightInput.value = kgToLbs(kg);
-                    } else {
+                    } else if (prevUnit === 'kg') {
                         weightInput.value = kgToLbs(currentValue);
                     }
                 }
@@ -128,16 +157,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 weightInput.setAttribute('required', 'required');
                 weightStoneValue.removeAttribute('required');
                 weightPounds.removeAttribute('required');
-            } else if (this.value === 'st') {
+                
+                // Sync other selector
+                if (weightUnitAlt) weightUnitAlt.value = 'lbs';
+                weightUnit.value = 'lbs';
+            } else if (value === 'st') {
                 // Show stone/pounds inputs
+                weightKgContainer.style.display = 'none';
                 weightStone.style.display = 'block';
-                weightInput.style.display = 'none';
                 
                 // Convert current value to stone
                 if (currentValue && !isNaN(currentValue)) {
                     let kg = currentValue;
+                    const prevUnit = weightUnit.getAttribute('data-prev-unit');
                     // If current unit was lbs, convert to kg first
-                    if (weightUnit.value === 'lbs') {
+                    if (prevUnit === 'lbs') {
                         kg = lbsToKg(currentValue);
                     }
                     const { stone, pounds } = kgToStone(kg);
@@ -148,14 +182,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 weightInput.removeAttribute('required');
                 weightStoneValue.setAttribute('required', 'required');
                 weightPounds.setAttribute('required', 'required');
+                
+                // Sync other selector
+                if (weightUnitAlt) weightUnitAlt.value = 'st';
+                weightUnit.value = 'st';
             } else {
                 // Convert to kg
+                weightKgContainer.style.display = 'flex';
                 weightStone.style.display = 'none';
-                weightInput.style.display = 'block';
                 
                 if (currentValue && !isNaN(currentValue)) {
-                    // If coming from lbs
                     const prevUnit = weightUnit.getAttribute('data-prev-unit');
+                    // If coming from lbs
                     if (prevUnit === 'lbs') {
                         weightInput.value = lbsToKg(currentValue);
                     }
@@ -173,11 +211,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 weightInput.setAttribute('required', 'required');
                 weightStoneValue.removeAttribute('required');
                 weightPounds.removeAttribute('required');
+                
+                // Sync other selector
+                if (weightUnitAlt) weightUnitAlt.value = 'kg';
+                weightUnit.value = 'kg';
             }
             
             // Store current unit for next conversion
-            weightUnit.setAttribute('data-prev-unit', this.value);
+            weightUnit.setAttribute('data-prev-unit', value);
+        };
+        
+        weightUnit.addEventListener('change', function() {
+            syncWeightUnits(this);
         });
+        
+        if (weightUnitAlt) {
+            weightUnitAlt.addEventListener('change', function() {
+                syncWeightUnits(this);
+            });
+        }
 
         // Update hidden kg value when stone/pounds change
         if (weightStoneValue && weightPounds) {

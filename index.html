@@ -164,21 +164,21 @@
 
                 <div class="form-group">
                     <label for="height">Height *</label>
-                    <div style="display: flex; gap: 10px; align-items: flex-start;">
+                    <div id="heightCmContainer" style="display: flex; gap: 10px; align-items: center;">
                         <input type="number" id="height" name="height" min="90" max="250" step="0.1" required style="flex: 1;">
                         <select id="heightUnit" style="width: 100px; flex-shrink: 0;">
                             <option value="cm">cm</option>
                             <option value="ft">ft/in</option>
                         </select>
                     </div>
-                    <div id="heightFeetInches" style="display: none; margin-top: 10px;">
-                        <div style="display: flex; gap: 10px;">
-                            <div style="flex: 1;">
-                                <input type="number" id="heightFeet" placeholder="Feet" min="3" max="8" step="1">
-                            </div>
-                            <div style="flex: 1;">
-                                <input type="number" id="heightInches" placeholder="Inches" min="0" max="11" step="1">
-                            </div>
+                    <div id="heightFeetInches" style="display: none;">
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="number" id="heightFeet" placeholder="Feet" min="3" max="8" step="1" style="flex: 1;">
+                            <input type="number" id="heightInches" placeholder="Inches" min="0" max="11" step="1" style="flex: 1;">
+                            <select id="heightUnitAlt" style="width: 100px; flex-shrink: 0;">
+                                <option value="ft">ft/in</option>
+                                <option value="cm">cm</option>
+                            </select>
                         </div>
                     </div>
                     <span class="error-message"></span>
@@ -186,7 +186,7 @@
 
                 <div class="form-group">
                     <label for="weight">Weight *</label>
-                    <div style="display: flex; gap: 10px; align-items: flex-start;">
+                    <div id="weightKgContainer" style="display: flex; gap: 10px; align-items: center;">
                         <input type="number" id="weight" name="weight" min="20" max="250" step="0.1" required style="flex: 1;">
                         <select id="weightUnit" style="width: 100px; flex-shrink: 0;">
                             <option value="kg">kg</option>
@@ -194,14 +194,15 @@
                             <option value="st">stone</option>
                         </select>
                     </div>
-                    <div id="weightStone" style="display: none; margin-top: 10px;">
-                        <div style="display: flex; gap: 10px;">
-                            <div style="flex: 1;">
-                                <input type="number" id="weightStoneValue" placeholder="Stone" min="3" max="40" step="1">
-                            </div>
-                            <div style="flex: 1;">
-                                <input type="number" id="weightPounds" placeholder="Pounds" min="0" max="13" step="1">
-                            </div>
+                    <div id="weightStone" style="display: none;">
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="number" id="weightStoneValue" placeholder="Stone" min="3" max="40" step="1" style="flex: 1;">
+                            <input type="number" id="weightPounds" placeholder="Pounds" min="0" max="13" step="1" style="flex: 1;">
+                            <select id="weightUnitAlt" style="width: 100px; flex-shrink: 0;">
+                                <option value="st">stone</option>
+                                <option value="kg">kg</option>
+                                <option value="lbs">lbs</option>
+                            </select>
                         </div>
                     </div>
                     <span class="error-message"></span>
