@@ -131,7 +131,7 @@
             </div>
 
             <div class="form-group">
-                <label>Pre-existing Conditions *</label>
+                <label>Do you have any pre-existing conditions? *</label>
                 <div class="radio-group">
                     <label>
                         <input type="radio" name="preexisting" value="yes" required>
@@ -143,6 +143,108 @@
                     </label>
                 </div>
                 <span class="error-message"></span>
+            </div>
+
+            <div class="health-section">
+                <h2>Health Information</h2>
+                <p class="section-description">Please provide accurate health information. This helps us determine appropriate coverage and pricing.</p>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="height">Height (inches) *</label>
+                        <input type="number" id="height" name="height" min="36" max="96" required>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="weight">Weight (lbs) *</label>
+                        <input type="number" id="weight" name="weight" min="50" max="500" required>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="smoking">Smoking Status *</label>
+                        <select id="smoking" name="smoking" required>
+                            <option value="">Select Status</option>
+                            <option value="never">Never Smoked</option>
+                            <option value="former">Former Smoker (quit 1+ years ago)</option>
+                            <option value="current">Current Smoker</option>
+                        </select>
+                        <span class="error-message"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Existing Health Conditions (check all that apply)</label>
+                    <div class="checkbox-grid">
+                        <label>
+                            <input type="checkbox" name="conditions" value="diabetes">
+                            Diabetes
+                        </label>
+                        <label>
+                            <input type="checkbox" name="conditions" value="heart_disease">
+                            Heart Disease
+                        </label>
+                        <label>
+                            <input type="checkbox" name="conditions" value="high_blood_pressure">
+                            High Blood Pressure
+                        </label>
+                        <label>
+                            <input type="checkbox" name="conditions" value="asthma">
+                            Asthma
+                        </label>
+                        <label>
+                            <input type="checkbox" name="conditions" value="cancer">
+                            Cancer (current or history)
+                        </label>
+                        <label>
+                            <input type="checkbox" name="conditions" value="stroke">
+                            Stroke (history)
+                        </label>
+                        <label>
+                            <input type="checkbox" name="conditions" value="kidney_disease">
+                            Kidney Disease
+                        </label>
+                        <label>
+                            <input type="checkbox" name="conditions" value="copd">
+                            COPD
+                        </label>
+                        <label>
+                            <input type="checkbox" name="conditions" value="mental_health">
+                            Mental Health Conditions
+                        </label>
+                        <label>
+                            <input type="checkbox" name="conditions" value="arthritis">
+                            Arthritis
+                        </label>
+                        <label>
+                            <input type="checkbox" name="conditions" value="sleep_apnea">
+                            Sleep Apnea
+                        </label>
+                        <label>
+                            <input type="checkbox" name="conditions" value="none">
+                            None of the Above
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="medications">Current Medications</label>
+                    <textarea id="medications" name="medications" rows="3" placeholder="List any medications you currently take (optional)"></textarea>
+                    <span class="error-message"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="surgeries">Past Surgeries or Hospitalizations</label>
+                    <textarea id="surgeries" name="surgeries" rows="3" placeholder="List any major surgeries or hospitalizations in the past 5 years (optional)"></textarea>
+                    <span class="error-message"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="familyHistory">Family Medical History</label>
+                    <textarea id="familyHistory" name="familyHistory" rows="3" placeholder="List any significant family medical history (heart disease, cancer, diabetes, etc.) - optional"></textarea>
+                    <span class="error-message"></span>
+                </div>
             </div>
 
             <div class="form-group">

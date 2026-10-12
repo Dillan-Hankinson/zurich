@@ -80,6 +80,25 @@ document.addEventListener('DOMContentLoaded', function() {
         terms: (checked) => {
             if (!checked) return 'You must agree to the terms and conditions';
             return '';
+        },
+
+        height: (value) => {
+            if (!value) return 'Height is required';
+            const height = parseInt(value);
+            if (height < 36 || height > 96) return 'Please enter a valid height (36-96 inches)';
+            return '';
+        },
+
+        weight: (value) => {
+            if (!value) return 'Weight is required';
+            const weight = parseInt(value);
+            if (weight < 50 || weight > 500) return 'Please enter a valid weight (50-500 lbs)';
+            return '';
+        },
+
+        smoking: (value) => {
+            if (!value) return 'Please select your smoking status';
+            return '';
         }
     };
 
@@ -120,14 +139,32 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Handle "None of the Above" checkbox logic
+    const conditionCheckboxes = document.querySelectorAll('input[name="conditions"]');
+    const noneCheckbox = document.querySelector('input[name="conditions"][value="none"]');
+    
+    conditionCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            if (this.value === 'none' && this.checked) {
+                // Uncheck all other conditions
+                conditionCheckboxes.forEach(cb => {
+                    if (cb.value !== 'none') cb.checked = false;
+                });
+            } else if (this.value !== 'none' && this.checked) {
+                // Uncheck "None of the Above"
+                if (noneCheckbox) noneCheckbox.checked = false;
+            }
+        });
+    });
+
     // Add real-time validation
-    const inputs = form.querySelectorAll('input, select');
+    const inputs = form.querySelectorAll('input:not([name="conditions"]), select, textarea');
     inputs.forEach(input => {
         if (input.type === 'radio') {
             input.addEventListener('change', function() {
                 validateField(this);
             });
-        } else if (input.type === 'checkbox') {
+        } else if (input.type === 'checkbox' && input.name !== 'conditions') {
             input.addEventListener('change', function() {
                 validateField(this);
             });
@@ -168,6 +205,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         if (isValid) {
+            // Collect health conditions
+            const selectedConditions = Array.from(document.querySelectorAll('input[name="conditions"]:checked'))
+                .map(cb => cb.value);
+
+            // Calculate BMI
+            const height = parseInt(document.getElementById('height').value);
+            const weight = parseInt(document.getElementById('weight').value);
+            const bmi = ((weight / (height * height)) * 703).toFixed(1);
+
             // Hide form and show success message
             form.style.display = 'none';
             successMessage.style.display = 'block';
@@ -179,6 +225,11 @@ document.addEventListener('DOMContentLoaded', function() {
             for (let [key, value] of formData.entries()) {
                 console.log(`${key}: ${value}`);
             }
+            console.log('Health Conditions:', selectedConditions);
+            console.log('Calculated BMI:', bmi);
+            
+            // In a real application, this data would be sent to a backend API
+            // for insurance pricing calculation based on risk factors
         } else {
             // Scroll to first error
             const firstError = form.querySelector('.invalid, .error-message:not(:empty)');
