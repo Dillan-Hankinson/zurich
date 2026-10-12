@@ -167,6 +167,12 @@ function evaluateApplication(formData, bmi, healthConditions) {
                 spouseConditions = formData.spouse_conditions.split(',').map(c => c.trim()).filter(c => c);
             }
         }
+        
+        // Handle "other" condition for spouse
+        if (spouseConditions.includes('other') && formData.spouse_otherCondition) {
+            const otherIndex = spouseConditions.indexOf('other');
+            spouseConditions[otherIndex] = `other: ${formData.spouse_otherCondition.trim()}`;
+        }
 
         const spouseEval = evaluatePerson(spouseAge, spouseBmi, spouseSmoking, spousePreexisting, spouseConditions, 'Spouse');
         
@@ -412,6 +418,12 @@ app.post('/api/submit-application', async (req, res) => {
                 } else if (typeof formData.spouse_conditions === 'string') {
                     spouseConditions = formData.spouse_conditions.split(',').map(c => c.trim()).filter(c => c);
                 }
+            }
+            
+            // Handle "other" condition for spouse
+            if (spouseConditions.includes('other') && formData.spouse_otherCondition) {
+                const otherIndex = spouseConditions.indexOf('other');
+                spouseConditions[otherIndex] = `other: ${formData.spouse_otherCondition.trim()}`;
             }
 
             spouseData = {
